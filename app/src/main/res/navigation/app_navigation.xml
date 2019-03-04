@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation
+        xmlns:android="http://schemas.android.com/apk/res/android"
+            xmlns:app="http://schemas.android.com/apk/res-auto"
+            xmlns:tools="http://schemas.android.com/tools"
+            android:id="@+id/nav_graph_id"
+            app:startDestination="@id/init_fragment">
+
+    <fragment
+            android:id="@+id/init_fragment"
+            android:name="mx.alxr.voicenotes.feature.init.InitFragment"
+            android:label="FragmentInit"
+            tools:layout="@layout/fragment_init">
+
+    </fragment>
+
+    <fragment
+            android:id="@+id/language_selector_fragment"
+            android:name="mx.alxr.voicenotes.feature.selector.NativeLanguageSelectorFragment"
+            android:label="NativeLanguageSelectorFragment"
+            tools:layout="@layout/fragment_native_language_selector">
+
+    </fragment>
+
+</navigation>

@@ -1,0 +1,84 @@
+apply plugin: 'com.android.application'
+
+apply plugin: 'kotlin-android'
+
+apply plugin: 'kotlin-android-extensions'
+
+apply plugin: 'kotlin-kapt'
+
+android {
+    compileSdkVersion 28
+    defaultConfig {
+        applicationId "mx.alxr.voicenotes"
+        minSdkVersion 21
+        targetSdkVersion 28
+        versionCode 1
+        versionName "1.0"
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+    }
+    buildTypes {
+        release {
+            resValue "bool", "enableDebugLogging", "false"
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+        debug{
+            resValue "bool", "enableDebugLogging", "true"
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+}
+
+dependencies {
+    implementation fileTree(include: ['*.jar'], dir: 'libs')
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
+    implementation 'androidx.core:core-ktx:1.1.0-alpha04'
+
+    def androidSupportVersion = '1.1.0-alpha02'
+    implementation "androidx.appcompat:appcompat:$androidSupportVersion"
+
+    def materialDesign = '1.1.0-alpha04'
+    implementation "com.google.android.material:material:$materialDesign"
+
+    testImplementation 'junit:junit:4.12'
+    androidTestImplementation 'androidx.test:runner:1.1.2-alpha01'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.1.2-alpha01'
+    // MS Speech recognition
+    // implementation 'com.microsoft.cognitiveservices.speech:client-sdk:1.3.1'
+    // Библиотека на смогла распознать полностью даже собственный семпл
+    // В то же время, гугл смог распознать файл от Microsoft
+
+
+    //DI
+    def koin_version = '1.0.2'
+    implementation "org.koin:koin-android-viewmodel:$koin_version"
+
+    //RX
+    def rxandroid_version = '2.1.0'
+    def rxjava_version = '2.2.2'
+    implementation "io.reactivex.rxjava2:rxandroid:$rxandroid_version"
+    implementation "io.reactivex.rxjava2:rxjava:$rxjava_version"
+    implementation 'io.reactivex.rxjava2:rxkotlin:2.3.0'
+
+
+    //DB
+    def room_version = '2.1.0-alpha04'
+    implementation "androidx.room:room-runtime:$room_version"
+    kapt "androidx.room:room-compiler:$room_version"
+    implementation "androidx.room:room-rxjava2:$room_version"
+    implementation 'androidx.lifecycle:lifecycle-extensions:2.1.0-alpha02'
+
+    //NETWORKING
+    def retrofit_version = '2.5.0'
+    implementation "com.squareup.retrofit2:retrofit:$retrofit_version"
+    implementation "com.squareup.retrofit2:adapter-rxjava2:$retrofit_version"
+    implementation "com.squareup.retrofit2:converter-gson:$retrofit_version"
+
+    //NAVIGATION
+    def navigation_version = '1.0.0-beta02'
+    implementation "android.arch.navigation:navigation-fragment:$navigation_version"
+
+}
