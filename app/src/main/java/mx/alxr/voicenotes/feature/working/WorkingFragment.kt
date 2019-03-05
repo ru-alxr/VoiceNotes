@@ -1,5 +1,4 @@
-package mx.alxr.voicenotes.feature.selector
-
+package mx.alxr.voicenotes.feature.working
 
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -10,7 +9,7 @@ import mx.alxr.voicenotes.R
 import mx.alxr.voicenotes.utils.logger.ILogger
 import org.koin.android.ext.android.inject
 
-class NativeLanguageSelectorFragment : Fragment() {
+class WorkingFragment : Fragment() {
 
 
     private val mLogger: ILogger by inject()
@@ -20,13 +19,8 @@ class NativeLanguageSelectorFragment : Fragment() {
         mLogger.with(this).add("onViewCreated").log()
     }
 
-    override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View? {
-        // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_native_language_selector, container, false)
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
+        return inflater.inflate(R.layout.fragment_working, container, false)
     }
-
 
 }

@@ -22,6 +22,7 @@ class InitFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        mLogger.with(this).add("onViewCreated").log()
         mViewModel
             .getLiveModel()
             .observe(

@@ -5,8 +5,8 @@ import androidx.room.PrimaryKey
 
 @Entity(tableName = "user")
 class UserEntity(@PrimaryKey val id:Long = 1L,
-                 private val language:String? = null,
-                 private val isAsked:Boolean = false) :IUser{
+                 val language:String? = null,
+                 val isAsked:Boolean = false) :IUser{
 
     override fun isNativeLanguageDefined(): Boolean {
         return !language.isNullOrEmpty()

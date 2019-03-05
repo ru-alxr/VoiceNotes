@@ -7,6 +7,8 @@ import io.reactivex.plugins.RxJavaPlugins
 import mx.alxr.voicenotes.R
 import mx.alxr.voicenotes.di.APPLICATION_MODULE
 import mx.alxr.voicenotes.di.FEATURE_INIT_MODULE
+import mx.alxr.voicenotes.di.FEATURE_PRELOAD_MODULE
+import mx.alxr.voicenotes.di.MAIN_VIEW_MODULE
 import mx.alxr.voicenotes.utils.logger.AppLogger
 import mx.alxr.voicenotes.utils.logger.ILogger
 import org.koin.android.ext.android.startKoin
@@ -21,7 +23,9 @@ class VoiceApplication : Application() {
             this,
             listOf(
                 APPLICATION_MODULE,
-                FEATURE_INIT_MODULE
+                FEATURE_INIT_MODULE,
+                FEATURE_PRELOAD_MODULE,
+                MAIN_VIEW_MODULE
             )
         )
         addUndeliverableErrorHandler()

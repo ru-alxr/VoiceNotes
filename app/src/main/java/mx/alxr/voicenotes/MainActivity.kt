@@ -4,15 +4,23 @@ import android.media.MediaPlayer
 import android.net.Uri
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.Observer
 import androidx.navigation.NavController
 import androidx.navigation.Navigation
+import mx.alxr.voicenotes.feature.FEATURE_INIT
+import mx.alxr.voicenotes.feature.FEATURE_PRELOAD
+import mx.alxr.voicenotes.feature.FEATURE_WORKING
+import org.koin.android.viewmodel.ext.android.viewModel
 import java.io.File
 import java.io.FileOutputStream
 import java.io.InputStream
 
+const val PAYLOAD_1 = "PAYLOAD_1"
+
 class MainActivity : AppCompatActivity() {
 
     private lateinit var mNavController: NavController
+    private val mViewModel: MainViewModel by viewModel()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -23,8 +31,21 @@ class MainActivity : AppCompatActivity() {
                 R.id.nav_host_fragment
             )
         mNavController.setGraph(R.navigation.app_navigation)
-    }
+        mViewModel
+            .getFeature()
+            .observe(
+                this,
+                Observer<UserState> {
+                    val args: Bundle = it?.create() ?: return@Observer
+                    when (it.feature) {
+                        FEATURE_INIT -> {}
+                        FEATURE_PRELOAD -> mNavController.navigate(R.id.action_to_preload, args)
+                        FEATURE_WORKING -> mNavController.navigate(R.id.action_to_work, args)
+                    }
+                }
+            )
 
+    }
 
     private fun playAudio(tmp: String) {
         val player = MediaPlayer.create(this, Uri.fromFile(File(tmp)))
@@ -55,4 +76,14 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+}
+
+fun UserState.create(): Bundle {
+    return Bundle()
+        .apply {
+            when (args) {
+                is Long -> putLong(PAYLOAD_1, args)
+                is String -> putString(PAYLOAD_1, args)
+            }
+        }
 }

@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<navigation
-        xmlns:android="http://schemas.android.com/apk/res/android"
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
             xmlns:app="http://schemas.android.com/apk/res-auto"
             xmlns:tools="http://schemas.android.com/tools"
             android:id="@+id/nav_graph_id"
@@ -14,11 +13,40 @@
 
     </fragment>
 
+    <action
+            android:id="@+id/action_to_preload"
+            app:destination="@id/preloadFragment"
+            app:launchSingleTop="true"
+            app:popUpTo="@+id/nav_graph_id"
+            app:popUpToInclusive="true"/>
+
+    <action
+            android:id="@+id/action_to_work"
+            app:destination="@id/working_fragment"
+            app:launchSingleTop="true"
+            app:popUpTo="@+id/nav_graph_id"
+            app:popUpToInclusive="true"/>
+
     <fragment
             android:id="@+id/language_selector_fragment"
             android:name="mx.alxr.voicenotes.feature.selector.NativeLanguageSelectorFragment"
             android:label="NativeLanguageSelectorFragment"
             tools:layout="@layout/fragment_native_language_selector">
+
+    </fragment>
+
+    <fragment
+            android:id="@+id/working_fragment"
+            android:name="mx.alxr.voicenotes.feature.working.WorkingFragment"
+            android:label="WorkingFragment"
+            tools:layout="@layout/fragment_working">
+
+    </fragment>
+
+    <fragment android:id="@+id/preloadFragment"
+              android:name="mx.alxr.voicenotes.feature.preload.PreloadFragment"
+              android:label="PreloadFragment"
+              tools:layout="@layout/fragment_preload">
 
     </fragment>
 

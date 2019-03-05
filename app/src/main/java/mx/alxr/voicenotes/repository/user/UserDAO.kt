@@ -12,6 +12,9 @@ interface UserDAO {
     @Query("SELECT * FROM user WHERE id = 1")
     fun getUser(): Flowable<List<UserEntity>>
 
+    @Query("SELECT * FROM user WHERE id = 1")
+    fun getUserImmediately(): UserEntity?
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     fun insert(user: UserEntity)
 
