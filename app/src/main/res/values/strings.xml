@@ -16,4 +16,5 @@
     <string name="preload_error_dialog_skip_preload">Skip</string>
     <string name="preload_error_dialog_retry_preload">Retry</string>
 
+    <string name="fetching_supported_languages_list_error">Error occurred while loading list of supported languages</string>
 </resources>

@@ -13,12 +13,14 @@ import mx.alxr.voicenotes.repository.language.ILanguageRepository
 import mx.alxr.voicenotes.utils.errors.ErrorSolution
 import mx.alxr.voicenotes.utils.errors.IErrorMessageResolver
 import mx.alxr.voicenotes.utils.errors.Interaction
+import mx.alxr.voicenotes.utils.logger.ILogger
 import mx.alxr.voicenotes.utils.rx.SingleDisposable
 
 class PreloadViewModel(
     private val languageRepository: ILanguageRepository,
     private val errorResolver: IErrorMessageResolver,
-    private val navigation: IFeatureNavigation
+    private val navigation: IFeatureNavigation,
+    private val logger:ILogger
 ) : ViewModel() {
 
     private val mLiveModel: MutableLiveData<Model> = MutableLiveData()
@@ -63,11 +65,13 @@ class PreloadViewModel(
     }
 
     private fun onPreloadError(throwable: Throwable) {
+        logger.with(this).add("onPreloadError $throwable").log()
         mLiveModel.value = mLiveModel.value!!
             .copy(isInProgress = false, solution = errorResolver.resolve(throwable, Interaction.Alert))
     }
 
     private fun onPreloadSuccess(t: Unit) {
+        logger.with(this).add("onPreloadSuccess").log()
         navigation.navigateFeature(FEATURE_SELECT_NATIVE_LANGUAGE)
     }
 

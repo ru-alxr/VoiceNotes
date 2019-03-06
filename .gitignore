@@ -82,3 +82,5 @@ build/
 *.ipr
 *~
 *.swp
+
+api_key.txt

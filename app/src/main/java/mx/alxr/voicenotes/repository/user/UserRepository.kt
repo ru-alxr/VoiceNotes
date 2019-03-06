@@ -12,7 +12,7 @@ class UserRepository(db: AppDatabase) : IUserRepository {
         return Flowable
             .fromCallable {
                 val user = mUserDAO.getUserImmediately()
-                if (user == null) mUserDAO.insert(UserEntity())
+                if (user == null) mUserDAO.insert(UserEntity(id = 1L, language = "", isAsked = false))
                 Unit
             }
             .subscribeOn(Schedulers.io())

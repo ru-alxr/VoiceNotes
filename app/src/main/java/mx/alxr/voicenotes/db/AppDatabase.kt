@@ -5,17 +5,21 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import mx.alxr.voicenotes.repository.language.LanguageDAO
+import mx.alxr.voicenotes.repository.language.LanguageEntity
 import mx.alxr.voicenotes.repository.record.RecordDAO
 import mx.alxr.voicenotes.repository.record.RecordEntity
 import mx.alxr.voicenotes.repository.user.UserDAO
 import mx.alxr.voicenotes.repository.user.UserEntity
 
-@Database(entities = [RecordEntity::class, UserEntity::class], version = 1)
+@Database(entities = [RecordEntity::class, UserEntity::class, LanguageEntity::class], version = 1)
 abstract class AppDatabase : RoomDatabase() {
 
     abstract fun recordDataDAO(): RecordDAO
 
     abstract fun userDataDAO(): UserDAO
+
+    abstract fun languageDataDAO(): LanguageDAO
 
     companion object {
         private var INSTANCE: AppDatabase? = null

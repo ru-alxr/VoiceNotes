@@ -9,7 +9,11 @@ import androidx.navigation.NavController
 import androidx.navigation.Navigation
 import mx.alxr.voicenotes.feature.FEATURE_INIT
 import mx.alxr.voicenotes.feature.FEATURE_PRELOAD
+import mx.alxr.voicenotes.feature.FEATURE_SELECT_NATIVE_LANGUAGE
 import mx.alxr.voicenotes.feature.FEATURE_WORKING
+import mx.alxr.voicenotes.repository.gca.IGoogleCloudApiKeyRepository
+import mx.alxr.voicenotes.utils.logger.ILogger
+import org.koin.android.ext.android.inject
 import org.koin.android.viewmodel.ext.android.viewModel
 import java.io.File
 import java.io.FileOutputStream
@@ -21,6 +25,8 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var mNavController: NavController
     private val mViewModel: MainViewModel by viewModel()
+    private val mLogger: ILogger by inject()
+    private val r: IGoogleCloudApiKeyRepository by inject()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -38,9 +44,11 @@ class MainActivity : AppCompatActivity() {
                 Observer<UserState> {
                     val args: Bundle = it?.create() ?: return@Observer
                     when (it.feature) {
-                        FEATURE_INIT -> {}
+                        FEATURE_INIT -> {
+                        }
                         FEATURE_PRELOAD -> mNavController.navigate(R.id.action_to_preload, args)
                         FEATURE_WORKING -> mNavController.navigate(R.id.action_to_work, args)
+                        FEATURE_SELECT_NATIVE_LANGUAGE -> mNavController.navigate(R.id.action_to_language_selector, args)
                     }
                 }
             )

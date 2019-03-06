@@ -14,7 +14,7 @@ val FEATURE_INIT_MODULE = module {
 
 val FEATURE_PRELOAD_MODULE = module {
 
-    viewModel { PreloadViewModel(languageRepository = get(), errorResolver = get(), navigation = get()) }
+    viewModel { PreloadViewModel(languageRepository = get(), errorResolver = get(), navigation = get(), logger = get()) }
 
 }
 

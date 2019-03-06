@@ -30,6 +30,10 @@ class AppLogger(private val enabled: Boolean) : ILogger, org.koin.log.Logger {
 
         }
 
+        override fun n(): ILogger.Builder {
+            return this
+        }
+
         override fun add(value: String): ILogger.Builder {
             return this
         }
@@ -48,6 +52,11 @@ class AppLogger(private val enabled: Boolean) : ILogger, org.koin.log.Logger {
         override fun add(value: String): ILogger.Builder {
             stringBuilder.append(value)
             stringBuilder.append("; ")
+            return this
+        }
+
+        override fun n(): ILogger.Builder {
+            stringBuilder.append("\n")
             return this
         }
 

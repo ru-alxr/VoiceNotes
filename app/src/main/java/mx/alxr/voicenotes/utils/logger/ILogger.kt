@@ -8,6 +8,8 @@ interface ILogger {
 
         fun add(value: String): Builder
 
+        fun n(): Builder
+
         fun add(key: String, value: Any?): Builder
 
         fun log()

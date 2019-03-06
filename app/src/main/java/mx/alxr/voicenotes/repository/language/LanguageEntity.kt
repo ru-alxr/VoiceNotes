@@ -1,0 +1,11 @@
+package mx.alxr.voicenotes.repository.language
+
+import androidx.room.Entity
+import androidx.room.PrimaryKey
+
+@Entity(tableName = "languages")
+class LanguageEntity(
+    @PrimaryKey val code: String,
+    val name: String,
+    val nameEng: String
+)

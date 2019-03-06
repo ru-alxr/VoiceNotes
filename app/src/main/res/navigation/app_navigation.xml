@@ -27,6 +27,13 @@
             app:popUpTo="@+id/nav_graph_id"
             app:popUpToInclusive="true"/>
 
+    <action
+        android:id="@+id/action_to_language_selector"
+        app:destination="@id/language_selector_fragment"
+        app:launchSingleTop="true"
+        app:popUpTo="@+id/nav_graph_id"
+        app:popUpToInclusive="true"/>
+
     <fragment
             android:id="@+id/language_selector_fragment"
             android:name="mx.alxr.voicenotes.feature.selector.NativeLanguageSelectorFragment"
