@@ -11,9 +11,12 @@ import mx.alxr.voicenotes.R
 import mx.alxr.voicenotes.repository.language.LanguageEntity
 import mx.alxr.voicenotes.utils.logger.ILogger
 
-class LanguageAdapter(private val inflater: LayoutInflater,
-                      private val logger:ILogger) :
-    PagedListAdapter<LanguageEntity, LanguageViewHolder>(DIFF_CALLBACK) {
+class LanguageAdapter(
+    private val inflater: LayoutInflater,
+    private val logger: ILogger,
+    private val callback:SelectionCallback
+) :
+    PagedListAdapter<LanguageEntity, LanguageAdapter.LanguageViewHolder>(DIFF_CALLBACK) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): LanguageViewHolder {
         val view = inflater.inflate(R.layout.item_language, parent, false)
@@ -43,9 +46,22 @@ class LanguageAdapter(private val inflater: LayoutInflater,
         }
     }
 
+    inner class LanguageViewHolder(
+        view: View,
+        val text: TextView = view.findViewById(R.id.text)
+    ) : RecyclerView.ViewHolder(view), View.OnClickListener{
+
+        init {
+            view.setOnClickListener(this)
+        }
+
+        override fun onClick(v: View?) {
+            callback.onSelected(getItem(adapterPosition))
+        }
+    }
+
 }
 
-class LanguageViewHolder(
-    view: View,
-    val text: TextView = view.findViewById(R.id.text)
-) : RecyclerView.ViewHolder(view)
+interface SelectionCallback{
+    fun onSelected(entity: LanguageEntity?)
+}

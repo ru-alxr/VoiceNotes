@@ -23,9 +23,21 @@ class LanguageRepository(
     private val mUserDAO: LanguageDAO = db.languageDataDAO()
 
     override fun loadAvailableLanguages(): Single<Unit> {
+        return Single
+            .fromCallable {
+                val count = mUserDAO.getCount()
+                count > 0
+            }
+            .flatMap {
+                if (it) Single.just(Unit)
+                else fetchLanguages()
+            }
+            .observeOn(Schedulers.io())
+    }
+
+    private fun fetchLanguages(): Single<Unit> {
         return configRepo
             .getLanguages()
-            .observeOn(Schedulers.io())
             .flatMap {
                 try {
                     val current = Locale.getDefault().toString().replace("_", "-")

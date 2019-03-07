@@ -19,4 +19,10 @@ interface LanguageDAO {
     @Query("SELECT * FROM languages ORDER BY position ASC")
     fun getAllByName(): DataSource.Factory<Int, LanguageEntity>
 
+    @Query("SELECT * FROM languages WHERE name LIKE '%' || :filter || '%' OR nameEng LIKE '%' || :filter || '%' OR code LIKE '%' || :filter || '%' ORDER BY position ASC")
+    fun getAllByNameFiltered(filter:String): DataSource.Factory<Int, LanguageEntity>
+
+    @Query("SELECT COUNT(code) FROM languages")
+    fun getCount(): Int
+
 }

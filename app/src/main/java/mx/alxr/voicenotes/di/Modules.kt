@@ -21,7 +21,7 @@ val FEATURE_PRELOAD_MODULE = module {
 
 val FEATURE_LANGUAGE_SELECTOR = module{
 
-    viewModel { LanguageSelectorViewModel(db = get()) }
+    viewModel { LanguageSelectorViewModel(db = get(), nav = get(), userRepository = get()) }
 
 }
 

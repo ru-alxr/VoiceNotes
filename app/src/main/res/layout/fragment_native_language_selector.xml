@@ -6,14 +6,27 @@
     android:orientation="vertical"
     tools:context=".feature.selector.NativeLanguageSelectorFragment">
 
-    <!-- TODO: Update blank fragment layout -->
-    <TextView
+    <androidx.appcompat.widget.Toolbar
+        android:id="@+id/toolbar_view"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        android:gravity="center"
-        android:padding="16dp"
-        android:text="@string/lang_selector" />
+        android:layout_height="@dimen/toolbar_height"
+        android:paddingStart="8dp"
+        android:paddingEnd="8dp" />
+
+    <EditText
+        android:id="@+id/language_filter_view"
+        android:layout_width="match_parent"
+        android:layout_height="60dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="16dp"
+        android:gravity="start|center_vertical"
+        android:hint="@string/type_your_native_language"
+        android:importantForAutofill="no"
+        android:paddingStart="8dp"
+        android:paddingEnd="8dp"
+        android:textColor="@color/main_text_color"
+        android:textSize="16sp"
+        tools:ignore="TextFields,UnusedAttribute" />
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recycler_view"

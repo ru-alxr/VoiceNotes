@@ -4,7 +4,7 @@ import androidx.room.Entity
 import androidx.room.PrimaryKey
 
 @Entity(tableName = "user")
-class UserEntity(@PrimaryKey val id:Long,
+data class UserEntity(@PrimaryKey val id:Long,
                  val language:String,
                  val isAsked:Boolean) :IUser{
 

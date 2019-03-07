@@ -17,4 +17,6 @@
     <string name="preload_error_dialog_retry_preload">Retry</string>
 
     <string name="fetching_supported_languages_list_error">Error occurred while loading list of supported languages</string>
+    <string name="type_your_native_language">Type your native language</string>
+    <string name="skip">Skip</string>
 </resources>
