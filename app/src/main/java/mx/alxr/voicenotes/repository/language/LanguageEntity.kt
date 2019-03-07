@@ -7,5 +7,12 @@ import androidx.room.PrimaryKey
 class LanguageEntity(
     @PrimaryKey val code: String,
     val name: String,
-    val nameEng: String
-)
+    val nameEng: String,
+    val position:Int
+){
+
+    override fun toString(): String {
+        return "$code = $name"
+    }
+
+}

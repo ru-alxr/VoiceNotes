@@ -90,6 +90,9 @@ dependencies {
     implementation 'com.google.firebase:firebase-core:16.0.7'
     implementation 'com.google.firebase:firebase-config:16.3.0'
 
+    //Paging library
+    implementation 'android.arch.paging:runtime:1.0.1'
+
 }
 
 apply plugin: 'com.google.gms.google-services'

@@ -5,10 +5,7 @@ import android.content.Context
 import io.reactivex.exceptions.UndeliverableException
 import io.reactivex.plugins.RxJavaPlugins
 import mx.alxr.voicenotes.R
-import mx.alxr.voicenotes.di.APPLICATION_MODULE
-import mx.alxr.voicenotes.di.FEATURE_INIT_MODULE
-import mx.alxr.voicenotes.di.FEATURE_PRELOAD_MODULE
-import mx.alxr.voicenotes.di.MAIN_VIEW_MODULE
+import mx.alxr.voicenotes.di.*
 import mx.alxr.voicenotes.utils.logger.AppLogger
 import mx.alxr.voicenotes.utils.logger.ILogger
 import org.koin.android.ext.android.startKoin
@@ -25,6 +22,7 @@ class VoiceApplication : Application() {
                 APPLICATION_MODULE,
                 FEATURE_INIT_MODULE,
                 FEATURE_PRELOAD_MODULE,
+                FEATURE_LANGUAGE_SELECTOR,
                 MAIN_VIEW_MODULE
             )
         )

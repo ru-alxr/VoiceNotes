@@ -84,3 +84,5 @@ build/
 *.swp
 
 api_key.txt
+
+google-services.json

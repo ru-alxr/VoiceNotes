@@ -1,5 +1,6 @@
 package mx.alxr.voicenotes.di
 
+import android.view.LayoutInflater
 import com.google.firebase.remoteconfig.FirebaseRemoteConfig
 import com.google.firebase.remoteconfig.FirebaseRemoteConfigSettings
 import mx.alxr.voicenotes.application.getAppLogger
@@ -25,6 +26,8 @@ import org.koin.dsl.module.module
 val APPLICATION_MODULE = module {
 
     single { androidContext().getAppLogger() }
+
+    single { LayoutInflater.from(androidContext())}
 
     single { UserRepository(db = get()) as IUserRepository }
 

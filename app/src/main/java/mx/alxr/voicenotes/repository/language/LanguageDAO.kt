@@ -1,5 +1,6 @@
 package mx.alxr.voicenotes.repository.language
 
+import androidx.paging.DataSource
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
@@ -14,5 +15,8 @@ interface LanguageDAO {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     fun insert(list: List<LanguageEntity>)
+
+    @Query("SELECT * FROM languages ORDER BY position ASC")
+    fun getAllByName(): DataSource.Factory<Int, LanguageEntity>
 
 }
