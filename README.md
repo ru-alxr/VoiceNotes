@@ -1,4 +1,4 @@
 # VoiceNotes
 Voice notes, decoded via Cloud services
 
-All credencials are removed :)
+March 6 2018: All credencials are removed :)
