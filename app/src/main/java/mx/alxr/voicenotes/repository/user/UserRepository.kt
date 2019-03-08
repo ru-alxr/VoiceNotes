@@ -4,6 +4,7 @@ import io.reactivex.Flowable
 import io.reactivex.Single
 import io.reactivex.schedulers.Schedulers
 import mx.alxr.voicenotes.db.AppDatabase
+import mx.alxr.voicenotes.repository.language.LanguageEntity
 import java.lang.RuntimeException
 
 class UserRepository(db: AppDatabase) : IUserRepository {
@@ -14,7 +15,8 @@ class UserRepository(db: AppDatabase) : IUserRepository {
         return Flowable
             .fromCallable {
                 val user = mUserDAO.getUserImmediately()
-                if (user == null) mUserDAO.insert(UserEntity(id = 1L, language = "", isAsked = false))
+                if (user == null) mUserDAO
+                    .insert(UserEntity(id = 1L, isAsked = false, languageCode = "", languageName = ""))
                 Unit
             }
             .subscribeOn(Schedulers.io())
@@ -26,12 +28,12 @@ class UserRepository(db: AppDatabase) : IUserRepository {
             }
     }
 
-    override fun setUserNativeLanguage(code: String): Single<Unit> {
+    override fun setUserNativeLanguage(language: LanguageEntity): Single<Unit> {
         return Single
             .fromCallable {
                 val user = mUserDAO.getUserImmediately()
                 user?.apply {
-                    mUserDAO.insert(copy(language = code, isAsked = true))
+                    mUserDAO.insert(copy(languageCode = language.code, languageName = language.name, isAsked = true))
                 } ?: throw RuntimeException("DB has no user object")
                 Unit
             }

@@ -1,15 +1,41 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-              android:orientation="vertical"
-              android:layout_width="match_parent"
-              android:layout_height="match_parent">
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
 
-    <TextView
+    <com.google.android.material.bottomnavigation.BottomNavigationView
+        android:paddingBottom="2dp"
+        android:paddingTop="2dp"
+        android:id="@+id/bottom_navigation"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        app:itemTextAppearanceActive="@style/BottomNavigationTextStyleActive"
+        app:itemTextAppearanceInactive="@style/BottomNavigationTextStyleInactive"
+        app:itemTextColor="@color/bottom_nav_text_color"
+        app:labelVisibilityMode="labeled"
+        app:itemIconSize="16dp"
+        app:elevation="6dp"
+        app:menu="@menu/bottom_navigation_menu" />
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_above="@id/bottom_navigation">
+
+        <FrameLayout
+            android:id="@+id/container1"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:textColor="@color/main_text_color"
-            android:textSize="@dimen/main_text_size"
-            android:text="@string/working"
-            android:gravity="center"/>
+            android:visibility="visible" />
 
-</LinearLayout>
+        <FrameLayout
+            android:id="@+id/container2"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:visibility="invisible" />
+
+    </RelativeLayout>
+
+</RelativeLayout>

@@ -61,7 +61,7 @@ class LanguageSelectorViewModel(
     fun onLanguageSelected(language: LanguageEntity) {
         mDisposable?.dispose()
         mDisposable = userRepository
-            .setUserNativeLanguage(language.code)
+            .setUserNativeLanguage(language)
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .subscribeWith(SingleDisposable<Unit>(

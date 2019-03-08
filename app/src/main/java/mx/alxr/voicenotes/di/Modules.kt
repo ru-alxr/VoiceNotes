@@ -1,6 +1,7 @@
 package mx.alxr.voicenotes.di
 
 import mx.alxr.voicenotes.MainViewModel
+import mx.alxr.voicenotes.feature.home.HomeViewModel
 import mx.alxr.voicenotes.feature.init.InitViewModel
 import mx.alxr.voicenotes.feature.preload.PreloadViewModel
 import mx.alxr.voicenotes.feature.selector.LanguageSelectorViewModel
@@ -28,5 +29,7 @@ val FEATURE_LANGUAGE_SELECTOR = module{
 val MAIN_VIEW_MODULE = module {
 
     viewModel { MainViewModel(featureNavigation = get(), userRepository = get()) }
+
+    viewModel { HomeViewModel(userRepository = get()) }
 
 }

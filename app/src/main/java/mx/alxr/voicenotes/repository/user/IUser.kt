@@ -4,7 +4,9 @@ interface IUser {
 
     fun isNativeLanguageDefined():Boolean
 
-    fun getNativeLanguage():String?
+    fun getNativeLanguage():String
+
+    fun getNativeLanguageCode():String
 
     fun isNativeLanguageExplicitlyAsked():Boolean
 
