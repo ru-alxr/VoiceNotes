@@ -32,4 +32,12 @@
     <string name="setting_native_language_explanation">This language is using to decode audio files via Google Cloud Platform.</string>
     <string name="setting_synchronization_status_explanation">This feature allows to store your data in the Google Cloud Storage (audio and decoded text).</string>
 
+    <string name="record_audio_permission_permanently_denied_message">Permission permanently denied</string>
+    <string name="record_audio_permission_permanently_denied_negative">Dismiss</string>
+    <string name="record_audio_permission_permanently_denied_positive">Settings</string>
+
+    <string name="record_audio_permission_rationale">Application cannot work without Record Audio permission</string>
+    <string name="record_audio_permission_rationale_negative">Dismiss</string>
+    <string name="record_audio_permission_rationale_positive">Got it</string>
+
 </resources>

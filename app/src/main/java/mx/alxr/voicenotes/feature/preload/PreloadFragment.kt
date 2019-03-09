@@ -13,6 +13,7 @@ import androidx.lifecycle.Observer
 import kotlinx.android.synthetic.main.fragment_preload.*
 import mx.alxr.voicenotes.PAYLOAD_1
 import mx.alxr.voicenotes.R
+import mx.alxr.voicenotes.utils.extensions.showDualSelectorDialog
 import mx.alxr.voicenotes.utils.logger.ILogger
 import org.koin.android.ext.android.inject
 import org.koin.android.viewmodel.ext.android.viewModel
@@ -40,35 +41,14 @@ class PreloadFragment : Fragment(), Observer<Model> {
         if (model == null) return
         progress_view.visibility = if (model.isInProgress) View.VISIBLE else View.INVISIBLE
         if (model.solution.message.isEmpty()) return
-        activity?.apply {
-            mViewModel.onErrorSolutionApplied()
-            AlertDialog
-                .Builder(this)
-                .setView(R.layout.dialog_preload_error)
-                .setCancelable(false)
-                .show()
-                .apply {
-                    findViewById<TextView>(R.id.message)?.apply {
-                        text = model.solution.message
-                    }
-                    findViewById<TextView>(R.id.negative)?.apply {
-                        setText(R.string.preload_error_dialog_skip_preload)
-                        setOnClickListener {
-                            dismiss()
-                            mViewModel.onSkipSelected()
-                        }
-                    }
-                    findViewById<TextView>(R.id.positive)?.apply {
-                        setText(R.string.preload_error_dialog_retry_preload)
-                        setOnClickListener {
-                            dismiss()
-                            mViewModel.onRetrySelected()
-                        }
-                    }
-                    window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
-                }
-
-        }
+        mViewModel.onErrorSolutionApplied()
+        showDualSelectorDialog(
+            message = model.solution.message,
+            negativeLabel = R.string.preload_error_dialog_skip_preload,
+            positiveLabel = R.string.preload_error_dialog_retry_preload,
+            negative = { mViewModel.onSkipSelected() },
+            positive = { mViewModel.onRetrySelected() }
+        )
     }
 
 }

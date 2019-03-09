@@ -4,9 +4,12 @@ import mx.alxr.voicenotes.MainViewModel
 import mx.alxr.voicenotes.feature.working.home.HomeViewModel
 import mx.alxr.voicenotes.feature.init.InitViewModel
 import mx.alxr.voicenotes.feature.preload.PreloadViewModel
+import mx.alxr.voicenotes.feature.recorder.IRecorder
+import mx.alxr.voicenotes.feature.recorder.Recorder
 import mx.alxr.voicenotes.feature.selector.LanguageSelectorViewModel
 import mx.alxr.voicenotes.feature.working.WorkingViewModel
 import mx.alxr.voicenotes.feature.working.settings.SettingsViewModel
+import org.koin.android.ext.koin.androidContext
 import org.koin.android.viewmodel.ext.koin.viewModel
 import org.koin.dsl.module.module
 
@@ -32,10 +35,12 @@ val MAIN_VIEW_MODULE = module {
 
     viewModel { MainViewModel(featureNavigation = get(), userRepository = get()) }
 
-    viewModel { HomeViewModel(userRepository = get()) }
+    viewModel { HomeViewModel(userRepository = get(), logger = get()) }
 
     viewModel { SettingsViewModel(userRepository = get(), nav = get()) }
 
     viewModel { WorkingViewModel(get()) }
+
+    single { Recorder(androidContext()) as IRecorder }
 
 }

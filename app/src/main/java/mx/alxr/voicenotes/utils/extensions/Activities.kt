@@ -2,13 +2,18 @@ package mx.alxr.voicenotes.utils.extensions
 
 import android.app.Activity
 import android.content.Context
+import android.content.Intent
 import android.graphics.drawable.Drawable
+import android.net.Uri
 import android.os.Build
 import android.os.VibrationEffect
 import android.os.Vibrator
+import android.provider.Settings
 import android.view.inputmethod.InputMethodManager
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
+import mx.alxr.voicenotes.R
 
 fun Activity.hideSoftKeyboard() {
     val token = (currentFocus ?: findViewById(android.R.id.content))?.windowToken ?: return
@@ -42,4 +47,17 @@ fun Activity.vibrate(duration:Long){
     }else{
         vibrator.vibrate(duration)
     }
+}
+
+fun Activity.goAppSettings(){
+    val intent = Intent()
+    intent.action = Settings.ACTION_APPLICATION_DETAILS_SETTINGS
+    val uri = Uri.fromParts("package", packageName, null)
+    intent.data = uri
+    try{
+        startActivity(intent)
+    }catch (e:Exception){
+        Toast.makeText(this, R.string.something_went_wrong, Toast.LENGTH_SHORT).show()
+    }
+
 }
