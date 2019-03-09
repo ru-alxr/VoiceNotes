@@ -28,6 +28,11 @@
             app:popUpToInclusive="true"/>
 
     <action
+        android:id="@+id/action_back_to_work"
+        app:destination="@id/working_fragment"
+        app:popUpTo="@+id/nav_graph_id"/>
+
+    <action
         android:id="@+id/action_to_language_selector"
         app:destination="@id/language_selector_fragment"
         app:launchSingleTop="true"
@@ -56,5 +61,21 @@
               tools:layout="@layout/fragment_preload">
 
     </fragment>
+
+    <action
+        android:id="@+id/action_preload_and_select_language"
+        app:destination="@id/preloadFragment"
+        app:enterAnim="@anim/fragment_appear_from_right_to_left"
+        app:exitAnim="@anim/fragment_disappear_from_right_to_left"
+        app:popEnterAnim="@anim/fragment_popup_appear"
+        app:popExitAnim="@anim/fragment_popup_disappear"/>
+
+    <action
+        android:id="@+id/action_select_language"
+        app:destination="@id/language_selector_fragment"
+        app:enterAnim="@anim/fragment_appear_from_right_to_left"
+        app:exitAnim="@anim/fragment_disappear_from_right_to_left"
+        app:popEnterAnim="@anim/fragment_popup_appear"
+        app:popExitAnim="@anim/fragment_popup_disappear"/>
 
 </navigation>

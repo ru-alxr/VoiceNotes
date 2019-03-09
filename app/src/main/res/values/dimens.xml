@@ -8,4 +8,16 @@
     <dimen name="dialog_corner_radius">8dp</dimen>
 
     <dimen name="status_bar_height">24dp</dimen>
+
+    <dimen name="settings_view_height">48dp</dimen>
+
+    <dimen name="setting_label_text_size">12sp</dimen>
+    <dimen name="setting_value_text_size">16sp</dimen>
+
+    <integer name="fragment_animation_duration">300</integer>
+    <dimen name="microphone_widget_size">64dp</dimen>
+    <dimen name="microphone_icon_size">36dp</dimen>
+
+    <dimen name="cancel_record_widget_size">64dp</dimen>
+
 </resources>

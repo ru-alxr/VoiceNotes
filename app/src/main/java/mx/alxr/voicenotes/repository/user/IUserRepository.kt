@@ -8,6 +8,8 @@ interface IUserRepository {
 
     fun getUser(): Flowable<IUser>
 
+    fun getUserSingle():Single<IUser>
+
     fun setUserNativeLanguage(language: LanguageEntity): Single<Unit>
 
     fun setNativeLanguageExplicitlyAsked(): Single<Unit>

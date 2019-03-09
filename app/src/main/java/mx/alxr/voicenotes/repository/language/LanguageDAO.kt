@@ -16,6 +16,9 @@ interface LanguageDAO {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     fun insert(list: List<LanguageEntity>)
 
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    fun insert(entity: LanguageEntity)
+
     @Query("SELECT * FROM languages ORDER BY position ASC")
     fun getAllByName(): DataSource.Factory<Int, LanguageEntity>
 

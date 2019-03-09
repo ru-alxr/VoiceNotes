@@ -1,0 +1,13 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="@dimen/microphone_icon_size"
+    android:height="@dimen/microphone_icon_size"
+    android:viewportHeight="64"
+    android:viewportWidth="64">
+    <path android:fillColor="#00000000" android:pathData="M32,2A30,30 0,1 0,62 32,30.034 30.034,0 0,0 32,2ZM32,60A28,28 0,1 1,60 32,28.032 28.032,0 0,1 32,60Z"/>
+    <path android:fillColor="#FFffff" android:pathData="M28,36h8a3,3 0,0 0,3 -3V9a3,3 0,0 0,-3 -3H28a3,3 0,0 0,-3 3V33A3,3 0,0 0,28 36ZM27,9a1,1 0,0 1,1 -1h8a1,1 0,0 1,1 1V33a1,1 0,0 1,-1 1H28a1,1 0,0 1,-1 -1Z"/>
+    <path android:fillColor="#FFffff" android:pathData="M44,26a3,3 0,0 0,-3 3v6a3,3 0,0 1,-3 3L26,38a3,3 0,0 1,-3 -3L23,29a3,3 0,0 0,-6 0v6a9.01,9.01 0,0 0,9 9h3v6L25,50a3,3 0,0 0,0 6L39,56a3,3 0,0 0,0 -6L35,50L35,44h3a9.01,9.01 0,0 0,9 -9L47,29A3,3 0,0 0,44 26ZM39,52a1,1 0,0 1,0 2L25,54a1,1 0,0 1,0 -2ZM33,50L31,50L31,44h2ZM45,35a7.009,7.009 0,0 1,-7 7L26,42a7.009,7.009 0,0 1,-7 -7L19,29a1,1 0,0 1,2 0v6a5.006,5.006 0,0 0,5 5L38,40a5.006,5.006 0,0 0,5 -5L43,29a1,1 0,0 1,2 0Z"/>
+    <path android:fillColor="#FFffff" android:pathData="M21.257,22.669l1.486,-1.338c-3.689,-4.1 -0.456,-7.242 -0.075,-7.587L22,13l-0.664,-0.747a7.562,7.562 0,0 0,-2.326 4.839A7.632,7.632 0,0 0,21.257 22.669Z"/>
+    <path android:fillColor="#FFffff" android:pathData="M19.72,23.306A8.285,8.285 0,0 1,17 17.289a8.773,8.773 0,0 1,2.662 -5.544L19,11l-0.664,-0.747a10.67,10.67 0,0 0,-3.33 6.941,10.178 10.178,0 0,0 3.274,7.5Z"/>
+    <path android:fillColor="#FFffff" android:pathData="M42.743,22.669a7.632,7.632 0,0 0,2.247 -5.577,7.562 7.562,0 0,0 -2.326,-4.839l-1.328,1.494A5.617,5.617 0,0 1,42.993 17.2a5.732,5.732 0,0 1,-1.736 4.128Z"/>
+    <path android:fillColor="#FFffff" android:pathData="M45.664,10.253l-1.33,1.492A8.773,8.773 0,0 1,47 17.289a8.285,8.285 0,0 1,-2.716 6.017l1.44,1.388a10.178,10.178 0,0 0,3.274 -7.5A10.67,10.67 0,0 0,45.664 10.253Z"/>
+</vector>

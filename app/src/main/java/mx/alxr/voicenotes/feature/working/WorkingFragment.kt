@@ -5,14 +5,20 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.Observer
 import kotlinx.android.synthetic.main.fragment_working.*
 import mx.alxr.voicenotes.R
-import mx.alxr.voicenotes.feature.SettingsFragment
-import mx.alxr.voicenotes.feature.home.HomeFragment
+import mx.alxr.voicenotes.feature.working.home.HomeFragment
+import mx.alxr.voicenotes.feature.working.settings.SettingsFragment
 import mx.alxr.voicenotes.utils.logger.ILogger
 import org.koin.android.ext.android.inject
+import org.koin.android.viewmodel.ext.android.viewModel
 
-class WorkingFragment : Fragment() {
+class WorkingFragment : Fragment(), Observer<Model> {
+
+    private val mLogger: ILogger by inject()
+
+    private val mViewModel: WorkingViewModel by viewModel()
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         return inflater.inflate(R.layout.fragment_working, container, false)
@@ -20,16 +26,26 @@ class WorkingFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        mLogger.with(this).add("onViewCreated").log()
+        mViewModel.getLiveModel().observe(this, this)
         bottom_navigation.itemIconTintList = null
         bottom_navigation.setOnNavigationItemSelectedListener {
             when (it.itemId) {
-                R.id.menu_home -> applyFragmentsVisibility(R.id.container1)
-                R.id.menu_settings -> applyFragmentsVisibility(R.id.container2)
+                R.id.menu_home -> mViewModel.onTabSelected(TAB_HOME)
+                R.id.menu_settings -> mViewModel.onTabSelected(TAB_SETTINGS)
             }
             true
         }
-        applyFragmentsVisibility(R.id.container1)
+    }
 
+    override fun onChanged(model: Model?) {
+        mLogger.with(this).add("onChanged $model").log()
+        model?.apply {
+            when (selectedTab) {
+                TAB_HOME -> applyFragmentsVisibility(R.id.container1)
+                TAB_SETTINGS -> applyFragmentsVisibility(R.id.container2)
+            }
+        }
     }
 
     private fun applyFragmentsVisibility(id: Int) {
@@ -44,10 +60,13 @@ class WorkingFragment : Fragment() {
     }
 
     private fun addChild(id: Int) {
-        val fragment: Fragment
-        when (id) {
-            R.id.container1 -> fragment = HomeFragment()
-            else -> fragment = SettingsFragment()
+        mLogger.with(this).add("addChild $id").log()
+        var fragment: Fragment? = childFragmentManager.findFragmentById(id)
+        if (fragment == null) {
+            when (id) {
+                R.id.container1 -> fragment = HomeFragment()
+                else -> fragment = SettingsFragment()
+            }
         }
         childFragmentManager.beginTransaction().add(id, fragment).commit()
     }

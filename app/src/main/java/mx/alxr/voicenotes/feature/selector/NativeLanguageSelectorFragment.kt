@@ -12,6 +12,7 @@ import androidx.recyclerview.widget.RecyclerView.SCROLL_STATE_DRAGGING
 import com.jakewharton.rxbinding2.widget.textChanges
 import io.reactivex.android.schedulers.AndroidSchedulers
 import kotlinx.android.synthetic.main.fragment_native_language_selector.*
+import mx.alxr.voicenotes.PAYLOAD_1
 import mx.alxr.voicenotes.R
 import mx.alxr.voicenotes.repository.language.LanguageEntity
 import mx.alxr.voicenotes.utils.extensions.hideSoftKeyboard
@@ -31,6 +32,7 @@ class NativeLanguageSelectorFragment : Fragment(), Observer<PagedList<LanguageEn
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        if (arguments?.get(PAYLOAD_1) is Boolean) mViewModel.setSelectionFlag()
         recycler_view.layoutManager = LinearLayoutManager(activity)
         mAdapter = LanguageAdapter(mLayoutInflater, logger = mLogger, callback = this)
         onQueryChange("")

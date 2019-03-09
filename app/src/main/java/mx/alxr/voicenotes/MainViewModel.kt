@@ -7,31 +7,41 @@ import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.Disposable
 import io.reactivex.schedulers.Schedulers
 import mx.alxr.voicenotes.feature.*
+import mx.alxr.voicenotes.repository.user.IUser
 import mx.alxr.voicenotes.repository.user.IUserRepository
+import mx.alxr.voicenotes.utils.rx.SingleDisposable
 
-class MainViewModel(private val featureNavigation: IFeatureNavigation,
-                    userRepository: IUserRepository) : ViewModel(), IHandler {
+class MainViewModel(
+    private val featureNavigation: IFeatureNavigation,
+    userRepository: IUserRepository
+) : ViewModel(), IHandler {
 
     private var mDisposable: Disposable? = null
 
     init {
         featureNavigation.attach(this)
         mDisposable = userRepository
-            .getUser()
+            .getUserSingle()
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
-            .doOnNext {
-                if (it.isNativeLanguageExplicitlyAsked()){
-                    mLiveUserState.value = mLiveUserState.value?.copy(feature = FEATURE_WORKING, args = null) ?: UserState(feature = FEATURE_WORKING)
-                    return@doOnNext
-                }
-                if (it.isNativeLanguageDefined()){
-                    mLiveUserState.value = mLiveUserState.value?.copy(feature = FEATURE_WORKING, args = null) ?: UserState(feature = FEATURE_WORKING)
-                    return@doOnNext
-                }
-                mLiveUserState.value = mLiveUserState.value?.copy(feature = FEATURE_PRELOAD, args = null) ?: UserState(feature = FEATURE_PRELOAD)
-            }
-            .subscribe()
+            .subscribeWith(SingleDisposable<IUser>(
+                success = {
+                    if (it.isNativeLanguageExplicitlyAsked()) {
+                        mLiveUserState.value = mLiveUserState.value?.copy(feature = FEATURE_WORKING, args = null)
+                            ?: UserState(feature = FEATURE_WORKING)
+                        return@SingleDisposable
+                    }
+                    if (it.isNativeLanguageDefined()) {
+                        mLiveUserState.value = mLiveUserState.value?.copy(feature = FEATURE_WORKING, args = null)
+                            ?: UserState(feature = FEATURE_WORKING)
+                        return@SingleDisposable
+                    }
+                    mLiveUserState.value = mLiveUserState.value?.copy(feature = FEATURE_PRELOAD, args = null)
+                        ?: UserState(feature = FEATURE_PRELOAD)
+                },
+                error = {}
+            )
+            )
     }
 
     override fun onCleared() {

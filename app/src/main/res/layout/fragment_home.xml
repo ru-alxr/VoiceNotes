@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:orientation="vertical">
+    android:layout_height="match_parent">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="@dimen/status_bar_height"
+        android:layout_alignParentTop="true"
         android:orientation="horizontal"
         android:paddingStart="8dp"
         android:paddingEnd="8dp"
@@ -39,11 +39,26 @@
 
     </LinearLayout>
 
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:gravity="center"
-        android:text="@string/home"
-        android:textSize="@dimen/main_text_size" />
+    <View
+        android:id="@+id/record_audio_view"
+        android:layout_width="@dimen/microphone_widget_size"
+        android:layout_height="@dimen/microphone_widget_size"
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentBottom="true"
+        android:layout_marginEnd="32dp"
+        android:layout_marginBottom="32dp"
+        android:background="@drawable/microphone_background" />
 
-</LinearLayout>
+    <View
+        android:id="@+id/cancel_recording_view"
+        android:layout_width="@dimen/cancel_record_widget_size"
+        android:layout_height="@dimen/cancel_record_widget_size"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentBottom="true"
+        android:layout_marginStart="32dp"
+        android:layout_marginBottom="32dp"
+        android:background="@drawable/cancel_recording_background"
+        android:visibility="invisible"
+        tools:visibility="visible" />
+
+</RelativeLayout>

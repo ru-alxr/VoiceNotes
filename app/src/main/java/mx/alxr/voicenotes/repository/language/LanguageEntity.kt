@@ -4,7 +4,7 @@ import androidx.room.Entity
 import androidx.room.PrimaryKey
 
 @Entity(tableName = "languages")
-class LanguageEntity(
+data class LanguageEntity(
     @PrimaryKey val code: String,
     val name: String,
     val nameEng: String,

@@ -27,7 +27,6 @@ class LanguageAdapter(
         val entity: LanguageEntity? = getItem(position)
         entity?.apply {
             holder.text.text = name
-            logger.with(this).add(this@apply.toString()).log()
         }
     }
 

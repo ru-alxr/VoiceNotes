@@ -5,6 +5,8 @@ const val FEATURE_PRELOAD: Int = 2
 const val FEATURE_SELECT_NATIVE_LANGUAGE = 3
 const val FEATURE_WORKING: Int = 4
 
+const val FEATURE_BACK: Int = 5
+
 interface IFeatureNavigation {
 
     fun navigateFeature(target: Int)

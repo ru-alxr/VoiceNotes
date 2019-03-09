@@ -4,12 +4,28 @@ import io.reactivex.Flowable
 import io.reactivex.Single
 import io.reactivex.schedulers.Schedulers
 import mx.alxr.voicenotes.db.AppDatabase
+import mx.alxr.voicenotes.repository.language.LanguageDAO
 import mx.alxr.voicenotes.repository.language.LanguageEntity
 import java.lang.RuntimeException
 
 class UserRepository(db: AppDatabase) : IUserRepository {
 
     private val mUserDAO: UserDAO = db.userDataDAO()
+    private val mLanguageDAO: LanguageDAO = db.languageDataDAO()
+
+    override fun getUserSingle(): Single<IUser> {
+        return Single
+            .fromCallable {
+                val user = mUserDAO.getUserImmediately()
+                if (user == null) {
+                    mUserDAO
+                        .insert(UserEntity(id = 1L, isAsked = false, languageCode = "", languageName = ""))
+                    mUserDAO.getUserImmediately()
+                }else{
+                    user
+                }
+            }
+    }
 
     override fun getUser(): Flowable<IUser> {
         return Flowable
@@ -33,7 +49,11 @@ class UserRepository(db: AppDatabase) : IUserRepository {
             .fromCallable {
                 val user = mUserDAO.getUserImmediately()
                 user?.apply {
-                    mUserDAO.insert(copy(languageCode = language.code, languageName = language.name, isAsked = true))
+                    val changed = languageCode != language.code || languageName != language.name
+                    if (changed) {
+                        mUserDAO.insert(copy(languageCode = language.code, languageName = language.name, isAsked = true))
+                        mLanguageDAO.insert(language.copy(position = language.position - 120))
+                    }
                 } ?: throw RuntimeException("DB has no user object")
                 Unit
             }
@@ -45,7 +65,8 @@ class UserRepository(db: AppDatabase) : IUserRepository {
             .fromCallable {
                 val user = mUserDAO.getUserImmediately()
                 user?.apply {
-                    mUserDAO.insert(copy(isAsked = true))
+                    val changed = !isAsked
+                    if (changed) mUserDAO.insert(copy(isAsked = true))
                 } ?: throw RuntimeException("DB has no user object")
                 Unit
             }

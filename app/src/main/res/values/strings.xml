@@ -26,5 +26,10 @@
     <string name="synchronization_status_disabled">Synchronization disabled</string>
     <string name="native_language">Native %s</string>
     <string name="native_language_empty">No native language selected</string>
+    <string name="native_language_setting">Native language</string>
+    <string name="synchronization_status">Synchronization status</string>
+
+    <string name="setting_native_language_explanation">This language is using to decode audio files via Google Cloud Platform.</string>
+    <string name="setting_synchronization_status_explanation">This feature allows to store your data in the Google Cloud Storage (audio and decoded text).</string>
 
 </resources>
