@@ -5,6 +5,7 @@
     android:layout_height="match_parent">
 
     <LinearLayout
+        android:id="@+id/top_panel"
         android:layout_width="match_parent"
         android:layout_height="@dimen/status_bar_height"
         android:layout_alignParentTop="true"
@@ -46,6 +47,13 @@
 
     </LinearLayout>
 
+    <fragment
+        android:name="mx.alxr.voicenotes.feature.working.records.RecordsFragment"
+        android:id="@+id/recycler_view"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_below="@id/top_panel"/>
+
     <View
         android:id="@+id/record_audio_view"
         android:layout_width="@dimen/microphone_widget_size"
@@ -54,6 +62,7 @@
         android:layout_alignParentBottom="true"
         android:layout_marginEnd="32dp"
         android:layout_marginBottom="32dp"
+        android:alpha="@dimen/record_button_alpha"
         android:background="@drawable/microphone_background" />
 
     <View

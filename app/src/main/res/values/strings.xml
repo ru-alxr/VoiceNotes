@@ -17,7 +17,11 @@
     <string name="preload_error_dialog_retry_preload">Retry</string>
 
     <string name="fetching_supported_languages_list_error">Error occurred while loading list of supported languages</string>
+    <string name="store_file_error">Error occurred while storing audio file locally</string>
+    <string name="fetch_file_error">Error occurred while fetching audio file locally</string>
+    <string name="fetch_file_error_crc32">Error occurred while fetching audio file locally: crc32 mismatch</string>
     <string name="type_your_native_language">Type your native language</string>
+    <string name="fetch_file_error_no_local_file">Error occurred while fetching audio file locally: no file</string>
     <string name="skip">Skip</string>
     <string name="home">Home</string>
     <string name="settings">Settings</string>
@@ -37,7 +41,14 @@
     <string name="record_audio_permission_permanently_denied_positive">Settings</string>
 
     <string name="record_audio_permission_rationale">Application cannot work without Record Audio permission</string>
+    <string name="store_file_permission_rationale">Application cannot work without Write External SD card permission</string>
     <string name="record_audio_permission_rationale_negative">Dismiss</string>
     <string name="record_audio_permission_rationale_positive">Got it</string>
+
+    <string name="record_item_synchronized">Synchronized</string>
+    <string name="record_item_is_not_synchronized">Not synchronized</string>
+    <string name="record_item_is_not_transcribed">No synchronized</string>
+
+    <string name="transcription_is_not_ready">Transcription is not ready</string>
 
 </resources>

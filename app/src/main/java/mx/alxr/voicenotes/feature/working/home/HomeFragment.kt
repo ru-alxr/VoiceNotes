@@ -5,6 +5,7 @@ import android.annotation.SuppressLint
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
+import android.util.TypedValue
 import android.view.LayoutInflater
 import android.view.MotionEvent
 import android.view.MotionEvent.*
@@ -110,17 +111,29 @@ class HomeFragment : Fragment(), Observer<Model>, View.OnTouchListener, Permissi
             Animation.RELATIVE_TO_SELF, 0.5f
         )
             .setCustomDuration(STOP_RECORDING_ANIMATION_DURATION)
+            .onAnimationEnd {
+                record_audio_view.alpha = with(TypedValue()){
+                    resources.getValue(R.dimen.record_button_alpha, this, true)
+                    float
+                }
+            }
             .setCustomFillAfter(true)
         record_audio_view.startAnimation(anim)
         activity?.vibrate(STOP_RECORDING_VIBRATION_DURATION)
     }
 
     private fun startRecording() {
+        if (checkRecordAudioPermission() && checkExternalStoragePermission()) {
+            startRecordingWithPermissionGranted()
+        }
+    }
+
+    private fun checkRecordAudioPermission(): Boolean {
         activity?.apply {
             if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M ||
                 PackageManager.PERMISSION_GRANTED == checkSelfPermission(Manifest.permission.RECORD_AUDIO)
             ) {
-                startRecordingWithPermissionGranted()
+                return true
             } else {
                 Dexter
                     .withActivity(this)
@@ -129,10 +142,29 @@ class HomeFragment : Fragment(), Observer<Model>, View.OnTouchListener, Permissi
                     .check()
             }
         }
+        return false
+    }
+
+    private fun checkExternalStoragePermission(): Boolean {
+        activity?.apply {
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M ||
+                PackageManager.PERMISSION_GRANTED == checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE)
+            ) {
+                return true
+            } else {
+                Dexter
+                    .withActivity(this)
+                    .withPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                    .withListener(this@HomeFragment)
+                    .check()
+            }
+        }
+        return false
     }
 
     private fun startRecordingWithPermissionGranted() {
         mViewModel.onRecordingStarted()
+        record_audio_view.alpha = 1.0F
         val anim = ScaleAnimation(
             1f, SCALE,
             1f, SCALE,
@@ -166,8 +198,16 @@ class HomeFragment : Fragment(), Observer<Model>, View.OnTouchListener, Permissi
     }
 
     override fun onPermissionRationaleShouldBeShown(permission: PermissionRequest?, token: PermissionToken?) {
+        val message: String = when (permission?.name) {
+            Manifest.permission.RECORD_AUDIO -> getString(R.string.record_audio_permission_rationale)
+            Manifest.permission.WRITE_EXTERNAL_STORAGE -> getString(R.string.store_file_permission_rationale)
+            else -> {
+                token?.cancelPermissionRequest()
+                return
+            }
+        }
         showDualSelectorDialog(
-            message = getString(R.string.record_audio_permission_rationale),
+            message = message,
             negativeLabel = R.string.record_audio_permission_rationale_negative,
             positiveLabel = R.string.record_audio_permission_rationale_positive,
             positive = { token?.continuePermissionRequest() },
@@ -176,14 +216,13 @@ class HomeFragment : Fragment(), Observer<Model>, View.OnTouchListener, Permissi
     }
 
     override fun onPermissionDenied(response: PermissionDeniedResponse?) {
-        if (response?.isPermanentlyDenied != false) {
-            showDualSelectorDialog(
-                message = getString(R.string.record_audio_permission_permanently_denied_message),
-                negativeLabel = R.string.record_audio_permission_permanently_denied_negative,
-                positiveLabel = R.string.record_audio_permission_permanently_denied_positive,
-                positive = { activity?.goAppSettings() }
-            )
-        }
+        if (response == null || !response.isPermanentlyDenied) return
+        showDualSelectorDialog(
+            message = getString(R.string.record_audio_permission_permanently_denied_message),
+            negativeLabel = R.string.record_audio_permission_permanently_denied_negative,
+            positiveLabel = R.string.record_audio_permission_permanently_denied_positive,
+            positive = { activity?.goAppSettings() }
+        )
     }
 
     override fun onPause() {

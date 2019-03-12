@@ -1,5 +1,6 @@
 package mx.alxr.voicenotes.repository.record
 
+import androidx.paging.DataSource
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy.REPLACE
@@ -9,11 +10,11 @@ import io.reactivex.Flowable
 @Dao
 interface RecordDAO {
 
-    @Query("SELECT * FROM records WHERE name = :name")
+    @Query("SELECT * FROM records WHERE fileName = :name")
     fun getRecord(name: String): Flowable<List<RecordEntity>>
 
-    @Query("SELECT * FROM records WHERE name = :name AND hash = :hash")
-    fun getRecord(name: String, hash: String): Flowable<List<RecordEntity>>
+    @Query("SELECT * FROM records WHERE fileName = :name AND crc32 = :crc32")
+    fun getRecord(name: String, crc32: String): Flowable<List<RecordEntity>>
 
     @Insert(onConflict = REPLACE)
     fun insert(record: RecordEntity)
@@ -23,5 +24,8 @@ interface RecordDAO {
 
     @Query("DELETE FROM records")
     fun deleteAll()
+
+    @Query("SELECT * FROM records ORDER BY date ASC")
+    fun getAllPaged(): DataSource.Factory<Int, RecordEntity>
 
 }

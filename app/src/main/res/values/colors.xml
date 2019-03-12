@@ -14,5 +14,7 @@
     <color name="microphone_background">@color/colorAccent</color>
     <color name="cancel_record_background">#f21800</color>
 
+    <color name="record_background">#cbeac6</color>
+
 
 </resources>

@@ -4,13 +4,13 @@ import androidx.room.Entity
 import androidx.room.PrimaryKey
 
 @Entity(tableName = "records")
-class RecordEntity (@PrimaryKey
-//todo
-                    val name: String,
-                    val hash: String){
-
-    override fun toString(): String {
-        return "USER $name /$hash"
-    }
-
-}
+data class RecordEntity(
+    @PrimaryKey
+    val fileName: String,
+    val date:Long,
+    val crc32: Long,
+    val duration: Long,
+    val transcription: String = "",
+    val isTranscribed:Boolean = false,
+    val isSynchronized:Boolean = false
+)

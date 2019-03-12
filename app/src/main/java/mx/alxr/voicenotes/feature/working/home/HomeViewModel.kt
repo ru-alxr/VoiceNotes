@@ -6,15 +6,23 @@ import androidx.lifecycle.ViewModel
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.Disposable
 import io.reactivex.schedulers.Schedulers
+import mx.alxr.voicenotes.feature.recorder.IRecorder
+import mx.alxr.voicenotes.repository.media.IMediaStorage
 import mx.alxr.voicenotes.repository.user.IUserRepository
 import mx.alxr.voicenotes.utils.logger.ILogger
+import mx.alxr.voicenotes.utils.rx.SingleDisposable
 
-class HomeViewModel(private val userRepository: IUserRepository,
-                    private val logger:ILogger) : ViewModel() {
+class HomeViewModel(
+    userRepository: IUserRepository,
+    private val logger: ILogger,
+    private val recorder: IRecorder,
+    private val storage: IMediaStorage
+) : ViewModel() {
 
     private val mLiveModel: MutableLiveData<Model> = MutableLiveData()
 
     private val mDisposable: Disposable
+    private var mStoreMediaDisposables: Disposable? = null
 
     init {
         mLiveModel.value = Model()
@@ -33,6 +41,7 @@ class HomeViewModel(private val userRepository: IUserRepository,
 
     override fun onCleared() {
         mDisposable.dispose()
+        mStoreMediaDisposables?.dispose()
         super.onCleared()
     }
 
@@ -48,30 +57,52 @@ class HomeViewModel(private val userRepository: IUserRepository,
         }
     }
 
-    fun onRecordingStopped(){
-        mLiveModel.value?.apply {
-            mLiveModel.value = copy(isRecordingInProgress = false, isStopRecordingRequested = false)
+    fun onRecordingStopped() {
+        val store = mLiveModel.value?.isPointerOut != true
+        logger.with(this).add("onRecordingStopped $store").log()
+        recorder.stopRecording()
+        mStoreMediaDisposables?.dispose()
+
+        if (store) {
+            mStoreMediaDisposables = storage
+                .storeFile(recorder.getRecord())
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribeWith(SingleDisposable<Unit>(
+                    success = {
+                        mLiveModel.value?.apply {
+                            mLiveModel.value = copy(isRecordingInProgress = false, isStopRecordingRequested = false)
+                        }
+                    },
+                    error = {
+                        it.printStackTrace()
+                    }
+                ))
+        } else {
+            mLiveModel.value?.apply {
+                mLiveModel.value = copy(isRecordingInProgress = false, isStopRecordingRequested = false)
+            }
         }
-        logger.with(this).add("onRecordingStopped").log()
     }
 
-    fun onRecordingStarted(){
+    fun onRecordingStarted() {
         mLiveModel.value?.apply {
             mLiveModel.value = copy(isRecordingInProgress = true)
         }
     }
 
-    fun onRecordingUIReady(){
+    fun onRecordingUIReady() {
         logger.with(this).add("onRecordingStarted").log()
+        recorder.startRecording()
     }
 
-    fun onCancelRecordingHandled(){
+    fun onCancelRecordingHandled() {
         mLiveModel.value?.apply {
             mLiveModel.value = copy(isPointerOut = false)
         }
     }
 
-    fun onStopRecordingRequested(){
+    fun onStopRecordingRequested() {
         mLiveModel.value?.apply {
             if (!isRecordingInProgress) return@apply
             mLiveModel.value = copy(isStopRecordingRequested = true)
@@ -83,7 +114,7 @@ class HomeViewModel(private val userRepository: IUserRepository,
 data class Model(
     val language: String = "",
     val isSynchronizationEnabled: Boolean = false,
-    val isPointerOut:Boolean = false,
-    val isRecordingInProgress:Boolean = false,
-    val isStopRecordingRequested:Boolean = false
+    val isPointerOut: Boolean = false,
+    val isRecordingInProgress: Boolean = false,
+    val isStopRecordingRequested: Boolean = false
 )
