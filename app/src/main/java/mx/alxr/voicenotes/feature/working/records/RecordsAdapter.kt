@@ -26,11 +26,6 @@ class RecordsAdapter(
     SeekBar.OnSeekBarChangeListener{
 
     private var mCheckedId: Long = -1
-        set(value) {
-            logger.with(this).add("SET ID $value").log()
-            field = value
-        }
-
     private var mProgress: Int = 0
     private var mTracking: Boolean = false
     private lateinit var mState: PlaybackState

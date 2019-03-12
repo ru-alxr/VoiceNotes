@@ -25,7 +25,7 @@ interface RecordDAO {
     @Query("DELETE FROM records")
     fun deleteAll()
 
-    @Query("SELECT * FROM records ORDER BY date ASC")
+    @Query("SELECT * FROM records ORDER BY date DESC")
     fun getAllPaged(): DataSource.Factory<Int, RecordEntity>
 
 }

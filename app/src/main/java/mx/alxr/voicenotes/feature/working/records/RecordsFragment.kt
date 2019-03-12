@@ -19,7 +19,7 @@ class RecordsFragment : Fragment(), Observer<PagedList<RecordEntity>> {
 
     private val mViewModel: RecordsViewModel by viewModel()
 
-    private val logger:ILogger by inject()
+    private val logger: ILogger by inject()
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         return inflater.inflate(R.layout.fragment_records, container, false)
@@ -30,9 +30,12 @@ class RecordsFragment : Fragment(), Observer<PagedList<RecordEntity>> {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        records_recycler_view.layoutManager = LinearLayoutManager(activity)
+        val manager = LinearLayoutManager(activity)
+        manager.reverseLayout = true
+        records_recycler_view.layoutManager = manager
         mAdapter = RecordsAdapter(logger, mLayoutInflater, mViewModel as ICallback, records_recycler_view)
         records_recycler_view.adapter = mAdapter
+        LinearLayoutManager(activity).reverseLayout = true
         mViewModel.getModel().observe(this, Observer { it?.apply { onModelChange(this) } })
         mViewModel.getLiveData().observe(this, this)
     }
@@ -43,7 +46,10 @@ class RecordsFragment : Fragment(), Observer<PagedList<RecordEntity>> {
     }
 
     override fun onChanged(list: PagedList<RecordEntity>?) {
-        if (::mAdapter.isInitialized) mAdapter.submitList(list)
+        if (::mAdapter.isInitialized) {
+            mAdapter.submitList(list)
+            records_recycler_view.post { records_recycler_view.smoothScrollToPosition(0) }
+        }
     }
 
     override fun onPause() {
