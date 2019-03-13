@@ -13,7 +13,9 @@ import android.view.inputmethod.InputMethodManager
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
+import androidx.core.content.FileProvider
 import mx.alxr.voicenotes.R
+import java.io.File
 
 fun Activity.hideSoftKeyboard() {
     val token = (currentFocus ?: findViewById(android.R.id.content))?.windowToken ?: return
@@ -59,5 +61,16 @@ fun Activity.goAppSettings(){
     }catch (e:Exception){
         Toast.makeText(this, R.string.something_went_wrong, Toast.LENGTH_SHORT).show()
     }
+
+}
+
+
+fun Activity.getFileUri(file: File): Uri {
+    return FileProvider
+        .getUriForFile(
+            this,
+            "$packageName.provider",
+            file
+        )
 
 }

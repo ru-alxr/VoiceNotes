@@ -7,5 +7,6 @@ interface IRecord {
     fun getDuration():Long
     fun getTranscription():String
     fun getDate():Long
+    fun getLanguageCode():String
 
 }

@@ -76,14 +76,6 @@ class MainActivity : AppCompatActivity() {
 
     }
 
-    private fun playAudio(tmp: String) {
-        val player = MediaPlayer.create(this, Uri.fromFile(File(tmp)))
-        player.setOnPreparedListener { mp -> mp.start() }
-        player.prepareAsync()
-        player.setOnCompletionListener { mp -> mp.release() }
-        player.isLooping = false
-    }
-
     private fun extractAssetsFile(filePath: String): String {
         val cacheFolder = cacheDir ?: return ""
         val file = File(cacheFolder, filePath)

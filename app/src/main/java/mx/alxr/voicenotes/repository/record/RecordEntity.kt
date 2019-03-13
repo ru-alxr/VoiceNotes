@@ -12,5 +12,6 @@ data class RecordEntity(
     val duration: Long,
     val transcription: String = "",
     val isTranscribed:Boolean = false,
-    val isSynchronized:Boolean = false
+    val isSynchronized:Boolean = false,
+    val languageCode:String
 )

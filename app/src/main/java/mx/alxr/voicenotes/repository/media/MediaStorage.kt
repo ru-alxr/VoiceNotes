@@ -24,7 +24,7 @@ class MediaStorage(
 
     private lateinit var format: SimpleDateFormat
 
-    override fun storeFile(file: File): Single<Unit> {
+    override fun storeFile(file: File, languageCode: String): Single<Unit> {
         return Single
             .fromCallable {
                 val mmr = MediaMetadataRetriever()
@@ -32,19 +32,14 @@ class MediaStorage(
                 val duration = mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION)
                 val durationLong = try {
                     duration.toLong()
-                } catch (e: NumberFormatException) {
+                } catch (e: java.lang.Exception) {
                     throw ProjectException(R.string.store_file_error)
                 }
                 if (!::format.isInitialized) {
                     format = SimpleDateFormat(DATE_PATTERN, Locale.US)
                 }
-                val directory = File(Environment.getExternalStorageDirectory(), "VoiceNotesMedia")
-                if (!directory.exists()) {
-                    directory.mkdirs()
-                }
-                if (!directory.exists()) throw ProjectException(R.string.store_file_error)
+                val directory = getDirectory()
                 val date = format.format(Date())
-
                 val name = String.format(FILE_NAME_PATTERN, date, extension)
                 val createdAt = file.lastModified()
                 val target = File(directory, name)
@@ -66,7 +61,13 @@ class MediaStorage(
                     target.delete()
                     throw ProjectException(R.string.store_file_error)
                 }
-                RecordImp(fileName = name, crc32 = crc32Copy, recordDuration = durationLong, date = createdAt)
+                RecordImp(
+                    fileName = name,
+                    crc32 = crc32Copy,
+                    recordDuration = durationLong,
+                    date = createdAt,
+                    language = languageCode
+                )
             }
             .flatMap { recordsRepository.insert(it) }
             .subscribeOn(Schedulers.io())
@@ -84,13 +85,25 @@ class MediaStorage(
                 target
             }
     }
+
+    @Throws(ProjectException::class)
+    override fun getDirectory(): File {
+        val directory = File(Environment.getExternalStorageDirectory(), "VoiceNotesMedia")
+        if (!directory.exists()) {
+            directory.mkdirs()
+        }
+        if (!directory.exists()) throw ProjectException(R.string.store_file_error_no_directory)
+        return directory
+    }
+
 }
 
 private class RecordImp(
     val fileName: String,
     private val crc32: Long,
     private val recordDuration: Long,
-    private val date: Long
+    private val date: Long,
+    private val language: String
 ) : IRecord {
     override fun getDate(): Long {
         return date
@@ -110,6 +123,10 @@ private class RecordImp(
 
     override fun getTranscription(): String {
         return ""
+    }
+
+    override fun getLanguageCode(): String {
+        return language
     }
 
     override fun toString(): String {

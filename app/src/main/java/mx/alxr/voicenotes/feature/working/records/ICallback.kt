@@ -7,4 +7,11 @@ interface ICallback {
     fun onSeekBarChange(position:Int)
     fun onStartTrackingTouch()
     fun onStopTrackingTouch()
+
+    fun requestShare(entity: RecordEntity)
+
+    fun requestGetTranscription(entity: RecordEntity)
+
+    fun requestSynchronize(entity: RecordEntity)
+
 }

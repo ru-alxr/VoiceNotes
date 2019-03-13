@@ -7,39 +7,71 @@
     android:background="@color/record_background"
     android:orientation="vertical">
 
-    <LinearLayout
+    <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="@dimen/record_status_height"
         android:orientation="horizontal"
         android:paddingStart="8dp"
-        android:paddingEnd="8dp"
-        android:weightSum="2">
+        android:paddingEnd="8dp">
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:orientation="horizontal"
+            android:layout_alignParentEnd="true"
+            android:id="@+id/icons_container">
+
+            <ImageView
+                android:id="@+id/share_record_view"
+                android:layout_width="56dp"
+                android:layout_height="40dp"
+                android:src="@drawable/ic_share_normal"
+                tools:ignore="ContentDescription"
+                android:paddingTop="8dp"
+                android:paddingBottom="8dp"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp"
+                android:layout_gravity="center_vertical"/>
+
+            <ImageView
+                android:id="@+id/recognize_voice_view"
+                android:layout_width="56dp"
+                android:layout_height="40dp"
+                android:src="@drawable/ic_cloud_computing_2"
+                tools:ignore="ContentDescription"
+                android:paddingTop="8dp"
+                android:paddingBottom="8dp"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp"
+                android:layout_gravity="center_vertical"/>
+
+            <ImageView
+                android:id="@+id/synchronization_status_view"
+                android:layout_width="56dp"
+                android:layout_height="40dp"
+                android:src="@drawable/ic_cloud_computing_synchronization_selector"
+                tools:ignore="ContentDescription"
+                android:paddingTop="8dp"
+                android:paddingBottom="8dp"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp"
+                android:layout_gravity="center_vertical"/>
+
+        </LinearLayout>
 
         <TextView
             android:id="@+id/date_view"
-            android:layout_width="0dp"
+            android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:layout_weight="1"
             android:ellipsize="end"
             android:gravity="start|center_vertical"
             android:singleLine="true"
             android:textColor="@color/main_text_color"
             android:textSize="14sp"
-            tools:text="3/10/2019 13:08:00" />
+            tools:text="3/10/2019 13:08:00"
+            android:layout_toStartOf="@id/icons_container"/>
 
-        <TextView
-            android:id="@+id/status_view"
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_weight="1"
-            android:ellipsize="end"
-            android:gravity="end|center_vertical"
-            android:singleLine="true"
-            android:textColor="@color/main_text_color"
-            android:textSize="14sp"
-            tools:text="Not synchronized" />
-
-    </LinearLayout>
+    </RelativeLayout>
 
     <RelativeLayout
         android:layout_width="match_parent"
@@ -78,11 +110,12 @@
             android:textSize="12sp"
             tools:text="0:01:25" />
 
-    </RelativeLayout>
+        <Space
+            android:layout_width="match_parent"
+            android:layout_height="16dp"
+            android:layout_below="@id/play_view"/>
 
-    <Space
-        android:layout_width="match_parent"
-        android:layout_height="16dp" />
+    </RelativeLayout>
 
     <TextView
         android:id="@+id/transcription_view"
@@ -92,10 +125,7 @@
         android:paddingEnd="8dp"
         android:textColor="@color/main_text_color"
         android:textSize="14sp"
-        tools:text="Transcription is not ready" />
-
-    <Space
-        android:layout_width="match_parent"
-        android:layout_height="16dp" />
+        tools:text="@string/lorem"
+        android:layout_marginBottom="16dp"/>
 
 </LinearLayout>

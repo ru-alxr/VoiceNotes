@@ -17,6 +17,7 @@
     <string name="preload_error_dialog_retry_preload">Retry</string>
 
     <string name="fetching_supported_languages_list_error">Error occurred while loading list of supported languages</string>
+    <string name="store_file_error_no_directory">Storage directory is not available</string>
     <string name="store_file_error">Error occurred while storing audio file locally</string>
     <string name="fetch_file_error">Error occurred while fetching audio file locally</string>
     <string name="fetch_file_error_crc32">Error occurred while fetching audio file locally: crc32 mismatch</string>
@@ -50,5 +51,22 @@
     <string name="record_item_is_not_transcribed">No synchronized</string>
 
     <string name="transcription_is_not_ready">Transcription is not ready</string>
+
+    <string name="lorem">Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</string>
+
+    <string name="share_voice_file_label">Share audio file via…</string>
+    <string name="share_transcription_label">Share transcription via…</string>
+    <string name="share_note_dialog_message">Select what do you want to share</string>
+    <string name="share_audio_file">Record</string>
+    <string name="share_transcription">Transcription</string>
+    <string name="share_nothing">Cancel</string>
+
+    <string name="empty_message">Empty message</string>
+    <string name="share_text_subject">VoiceNotes transcription</string>
+
+
+    <string name="main_feature_invitation_part_1">Transcription is not available now\n\nPress icon</string>
+    <string name="main_feature_invitation_part_2">on selected record control panel</string>
+
 
 </resources>

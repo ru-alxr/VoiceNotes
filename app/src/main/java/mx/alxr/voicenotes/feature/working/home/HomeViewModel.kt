@@ -32,7 +32,7 @@ class HomeViewModel(
             .observeOn(AndroidSchedulers.mainThread())
             .doOnNext {
                 it?.apply {
-                    mLiveModel.value = mLiveModel.value?.copy(language = getNativeLanguage())
+                    mLiveModel.value = mLiveModel.value?.copy(language = getNativeLanguage(), languageCode = getNativeLanguageCode())
                 }
 
             }
@@ -64,8 +64,9 @@ class HomeViewModel(
         mStoreMediaDisposables?.dispose()
 
         if (store) {
+            val model = mLiveModel.value ?:return
             mStoreMediaDisposables = storage
-                .storeFile(recorder.getRecord())
+                .storeFile(recorder.getRecord(), model.languageCode)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribeWith(SingleDisposable<Unit>(
@@ -113,6 +114,7 @@ class HomeViewModel(
 
 data class Model(
     val language: String = "",
+    val languageCode:String = "",
     val isSynchronizationEnabled: Boolean = false,
     val isPointerOut: Boolean = false,
     val isRecordingInProgress: Boolean = false,

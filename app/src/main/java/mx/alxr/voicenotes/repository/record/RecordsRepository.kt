@@ -17,7 +17,8 @@ class RecordsRepository(db: AppDatabase, val logger:ILogger) : IRecordsRepositor
                     crc32 = record.getCRC32(),
                     duration = record.getDuration(),
                     transcription = record.getTranscription(),
-                    date = record.getDate()
+                    date = record.getDate(),
+                    languageCode = record.getLanguageCode()
                 )
                 dao.insert(entity)
                 logger.with(this).add("Insert $record").log()

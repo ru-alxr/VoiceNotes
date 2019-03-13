@@ -40,6 +40,8 @@ class RecordsViewModel(
 
     private var mDisposable: Disposable? = null
 
+    private var mFeatureDisposable: Disposable? = null
+
     private val mLiveModel: MutableLiveData<Model> = MutableLiveData()
 
     init {
@@ -123,11 +125,42 @@ class RecordsViewModel(
         player.deepPause()
     }
 
+    override fun requestShare(entity: RecordEntity) {
+        val model = mLiveModel.value ?: return
+        mLiveModel.value = model
+            .copy(
+                share = Share(
+                    file = entity.fileName,
+                    transcription = entity.transcription,
+                    isTranscriptionReady = entity.isTranscribed
+                )
+            )
+    }
+
+    override fun requestGetTranscription(entity: RecordEntity) {
+
+    }
+
+    override fun requestSynchronize(entity: RecordEntity) {
+
+    }
+
+    fun onShareHandled(){
+        val model = mLiveModel.value ?: return
+        mLiveModel.value = model.copy(share = Share())
+    }
+
 }
 
 data class Model(
     val playingRecordCRC32: Long = -1,
     val state: PlaybackState = PlaybackState.Stopped,
     val progress: Int = 0,
-    val isTracking: Boolean = false
+    val isTracking: Boolean = false,
+    val share:Share = Share()
+)
+
+data class Share(val file:String = "",
+                 val transcription:String = "",
+                 val isTranscriptionReady:Boolean = false
 )

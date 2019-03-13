@@ -3,6 +3,7 @@ package mx.alxr.voicenotes.feature.working.records
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageView
 import android.widget.SeekBar
 import android.widget.TextView
 import androidx.paging.PagedListAdapter
@@ -23,7 +24,7 @@ class RecordsAdapter(
     private val recyclerView: RecyclerView
 ) :
     PagedListAdapter<RecordEntity, RecordsAdapter.RecordViewHolder>(DIFF_CALLBACK),
-    SeekBar.OnSeekBarChangeListener{
+    SeekBar.OnSeekBarChangeListener {
 
     private var mCheckedId: Long = -1
     private var mProgress: Int = 0
@@ -94,33 +95,40 @@ class RecordsAdapter(
     inner class RecordViewHolder(
         view: View,
         private val date: TextView = view.findViewById(R.id.date_view),
-        private val status: TextView = view.findViewById(R.id.status_view),
+        private val status: View = view.findViewById(R.id.synchronization_status_view),
         private val play: CheckableImageView = view.findViewById(R.id.play_view),
         private val seek: SeekBar = view.findViewById(R.id.seek_bar_view),
         private val duration: TextView = view.findViewById(R.id.duration_view),
-        private val transcription: TextView = view.findViewById(R.id.transcription_view)
+        private val transcription: TextView = view.findViewById(R.id.transcription_view),
+        private val recognize: ImageView = view.findViewById(R.id.recognize_voice_view),
+        private val share:View = view.findViewById(R.id.share_record_view)
+
     ) : RecyclerView.ViewHolder(view), View.OnClickListener {
 
         init {
             play.setOnClickListener(this)
+            status.setOnClickListener(this)
+            recognize.setOnClickListener(this)
+            share.setOnClickListener(this)
             seek.setOnSeekBarChangeListener(this@RecordsAdapter)
         }
 
         override fun onClick(v: View?) {
-            when (v) {
-                play -> {
-                    val position = adapterPosition
-                    if (position.invalid()) return
-                    getItem(position)?.apply {
-                        callback.onPlayButtonClick(this)
-                    }
+            val position = adapterPosition
+            if (position.invalid()) return
+            getItem(position)?.apply{
+                when (v) {
+                    play -> callback.onPlayButtonClick(this)
+                    share -> callback.requestShare(this)
+                    recognize -> callback.requestGetTranscription(this)
+                    status -> callback.requestSynchronize(this)
                 }
             }
         }
 
         fun bind(entity: RecordEntity) {
             date.text = dateFormat.format(Date(entity.date))
-            status.setText(if (entity.isSynchronized) R.string.record_item_synchronized else R.string.record_item_is_not_synchronized)
+            status.isEnabled = !entity.isSynchronized
             if (entity.isTranscribed) {
                 transcription.text = entity.transcription
             } else {
@@ -137,6 +145,8 @@ class RecordsAdapter(
                 seek.isEnabled = false
                 seek.progress = 0
             }
+            transcription.visibility = if (entity.isTranscribed) View.VISIBLE else View.INVISIBLE
+            recognize.visibility = if (entity.isTranscribed) View.INVISIBLE else View.VISIBLE
         }
 
         private fun setDuration(d: Number) {

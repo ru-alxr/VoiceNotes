@@ -47,3 +47,50 @@ fun Fragment.showDualSelectorDialog(
     }
 
 }
+
+fun Fragment.showTripleSelectorDialog(
+    message: Int,
+    firstLabel: Int,
+    secondLabel: Int,
+    thirdLabel: Int,
+    first: () -> Unit,
+    second: () -> Unit,
+    third: () -> Unit = {}
+
+) {
+    activity?.apply {
+        AlertDialog
+            .Builder(this)
+            .setView(R.layout.dialog_triple_selection)
+            .setCancelable(false)
+            .show()
+            .apply {
+                findViewById<TextView>(R.id.message)?.apply {
+                    setText(message)
+                }
+                findViewById<TextView>(R.id.selection_one)?.apply {
+                    setText(firstLabel)
+                    setOnClickListener {
+                        dismiss()
+                        first.invoke()
+                    }
+                }
+                findViewById<TextView>(R.id.selection_two)?.apply {
+                    setText(secondLabel)
+                    setOnClickListener {
+                        dismiss()
+                        second.invoke()
+                    }
+                }
+                findViewById<TextView>(R.id.selection_three)?.apply {
+                    setText(thirdLabel)
+                    setOnClickListener {
+                        dismiss()
+                        third.invoke()
+                    }
+                }
+                window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+            }
+    }
+
+}
