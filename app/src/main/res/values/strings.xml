@@ -70,5 +70,16 @@
     <string name="share_voice_file_subject">Audio file %s</string>
     <string name="share_voice_file_extra">Record performed with VoiceNotes for Android</string>
 
+    <string name="error_registration_required">Registration required to perform operation</string>
+    <string name="error_record_language_required">Language of voice must be defined</string>
+    <string name="error_no_funds">Not enough funds</string>
+
+    <string name="cancel">Cancel</string>
+    <string name="confirm">Confirm</string>
+
+    <string name="cost_coins">Requires %s coins</string>
+    <string name="of">of</string>
+    <string name="remaining_coins">remaining %s coins</string>
+    <string name="attention_required">Attention required</string>
 
 </resources>

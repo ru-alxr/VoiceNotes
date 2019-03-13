@@ -11,6 +11,8 @@ import io.reactivex.schedulers.Schedulers
 import mx.alxr.voicenotes.db.AppDatabase
 import mx.alxr.voicenotes.feature.player.IPlayback
 import mx.alxr.voicenotes.feature.player.IPlayer
+import mx.alxr.voicenotes.feature.recognizer.IRecognizer
+import mx.alxr.voicenotes.feature.recognizer.TranscriptionArgs
 import mx.alxr.voicenotes.repository.media.IMediaStorage
 import mx.alxr.voicenotes.repository.record.RecordEntity
 import mx.alxr.voicenotes.utils.errors.ErrorSolution
@@ -25,12 +27,14 @@ class RecordsViewModel(
     private val player: IPlayer,
     private val storage: IMediaStorage,
     private val resolver: IErrorMessageResolver,
-    private val logger: ILogger
+    private val logger: ILogger,
+    private val recognizer: IRecognizer
 ) : ViewModel(), ICallback, IPlayback {
 
     private val mLiveModel: MutableLiveData<Model> = MutableLiveData()
     private val dao = db.recordDataDAO()
     private var mDisposable: Disposable? = null
+    private var mFeatureDisposable: Disposable? = null
 
     init {
         mLiveModel.value = Model()
@@ -111,10 +115,14 @@ class RecordsViewModel(
     private fun onFileError(t: Throwable) {
         logger.with(this).add("onFileError ${resolver.resolve(t).message}").log()
         val model = mLiveModel.value ?: return
-        mLiveModel.value = model.copy(playingRecordCRC32 = -1, state = PlaybackState.Stopped, solution = resolver.resolve(t, Interaction.Snack))
+        mLiveModel.value = model.copy(
+            playingRecordCRC32 = -1,
+            state = PlaybackState.Stopped,
+            solution = resolver.resolve(t, Interaction.Snack)
+        )
     }
 
-    fun onErrorHandled(){
+    fun onErrorHandled() {
         val model = mLiveModel.value ?: return
         mLiveModel.value = model.copy(solution = ErrorSolution())
     }
@@ -141,17 +149,61 @@ class RecordsViewModel(
     }
 
     override fun requestGetTranscription(entity: RecordEntity) {
+        mFeatureDisposable?.dispose()
+        mFeatureDisposable = recognizer
+            .prepareArgs(entity)
+            .subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribeWith(
+                SingleDisposable<TranscriptionArgs>(
+                    success = {
+                        logger.with(this@RecordsViewModel).add("requestGetTranscription success $it").log()
+                        val model = mLiveModel.value ?: return@SingleDisposable
+                        mLiveModel.value = model.copy(args = it)
+                    },
+                    error = {
+                        onPrepareRecognitionError(entity, it)
+                    }
+                )
+            )
+    }
 
+    fun onRecognitionArgsHandled(){
+        val model = mLiveModel.value ?: return
+        mLiveModel.value = model.copy(args = TranscriptionArgs())
+    }
+
+    fun onRecognitionAccepted(args:TranscriptionArgs){
+        logger.with(this).add("onRecognitionAccepted").log()
+    }
+
+    private fun onPrepareRecognitionError(entity: RecordEntity, throwable: Throwable) {
+        logger.with(this@RecordsViewModel).add("onPrepareRecognitionError $throwable").log()
+        val model = mLiveModel.value ?: return
+        mLiveModel.value = model.copy(solution = resolver.resolve(throwable, Interaction.Alert, entity.getTag()))
     }
 
     override fun requestSynchronize(entity: RecordEntity) {
 
     }
 
-    fun onShareHandled(){
+    fun onShareHandled() {
         val model = mLiveModel.value ?: return
         mLiveModel.value = model.copy(share = Share())
     }
+
+    fun onRegistrationSelected() {
+
+    }
+
+    fun onLanguageSelectorSelected(details: Map<String, String>) {
+
+    }
+
+    fun onFundingSelected() {
+
+    }
+
 
 }
 
@@ -160,11 +212,13 @@ data class Model(
     val state: PlaybackState = PlaybackState.Stopped,
     val progress: Int = 0,
     val isTracking: Boolean = false,
-    val share:Share = Share(),
-    val solution: ErrorSolution = ErrorSolution()
+    val share: Share = Share(),
+    val solution: ErrorSolution = ErrorSolution(),
+    val args:TranscriptionArgs = TranscriptionArgs()
 )
 
-data class Share(val file:String = "",
-                 val transcription:String = "",
-                 val isTranscriptionReady:Boolean = false
+data class Share(
+    val file: String = "",
+    val transcription: String = "",
+    val isTranscriptionReady: Boolean = false
 )

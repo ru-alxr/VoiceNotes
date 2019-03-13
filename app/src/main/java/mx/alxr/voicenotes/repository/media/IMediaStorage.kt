@@ -13,7 +13,6 @@ interface IMediaStorage {
 
     fun getFile(name:String, crc32:Long):Single<File>
 
-
     @Throws(ProjectException::class)
     fun getDirectory():File
 

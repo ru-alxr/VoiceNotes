@@ -7,11 +7,24 @@ import java.net.UnknownHostException
 class ErrorMessageResolver(val resources: IStringResources) : IErrorMessageResolver {
 
     override fun resolve(throwable: Throwable): ErrorSolution {
-        return ErrorSolution(message = resolveMessage(throwable))
+        return ErrorSolution(message = resolveMessage(throwable), resolutionRequired = resolveRequiredData(throwable))
     }
 
     override fun resolve(throwable: Throwable, defaultInteraction: Interaction): ErrorSolution {
-        return ErrorSolution(message = resolveMessage(throwable), interaction = defaultInteraction)
+        return ErrorSolution(message = resolveMessage(throwable), interaction = defaultInteraction, resolutionRequired = resolveRequiredData(throwable))
+    }
+
+    override fun resolve(
+        throwable: Throwable,
+        defaultInteraction: Interaction,
+        details: Map<String, String>
+    ): ErrorSolution {
+        return ErrorSolution(
+            message = resolveMessage(throwable),
+            interaction = defaultInteraction,
+            resolutionRequired = resolveRequiredData(throwable),
+            details = details
+        )
     }
 
     private fun resolveMessage(throwable: Throwable): String {
@@ -21,6 +34,19 @@ class ErrorMessageResolver(val resources: IStringResources) : IErrorMessageResol
             is ProjectException -> resources.getString(throwable.messageId)
 
             else -> resources.getString(R.string.something_went_wrong)
+        }
+    }
+
+    private fun resolveRequiredData(throwable: Throwable): String{
+        return if (throwable is ProjectException){
+            when(throwable.messageId){
+                R.string.error_no_funds -> REQUIRED_MORE_FUNDS
+                R.string.error_record_language_required -> REQUIRED_RECORD_LANGUAGE_CODE
+                R.string.error_registration_required -> REQUIRED_USER_REGISTRATION
+                else -> ""
+            }
+        }else{
+            ""
         }
     }
 
