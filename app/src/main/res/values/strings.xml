@@ -67,6 +67,8 @@
 
     <string name="main_feature_invitation_part_1">Transcription is not available now\n\nPress icon</string>
     <string name="main_feature_invitation_part_2">on selected record control panel</string>
+    <string name="share_voice_file_subject">Audio file %s</string>
+    <string name="share_voice_file_extra">Record performed with VoiceNotes for Android</string>
 
 
 </resources>

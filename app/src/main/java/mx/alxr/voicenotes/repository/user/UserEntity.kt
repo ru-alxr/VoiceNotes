@@ -27,4 +27,8 @@ data class UserEntity(
         return languageCode
     }
 
+    override fun isRegistered(): Boolean {
+        return false
+    }
+
 }

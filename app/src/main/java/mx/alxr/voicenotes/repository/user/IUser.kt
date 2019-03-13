@@ -10,4 +10,6 @@ interface IUser {
 
     fun isNativeLanguageExplicitlyAsked():Boolean
 
+    fun isRegistered():Boolean
+
 }

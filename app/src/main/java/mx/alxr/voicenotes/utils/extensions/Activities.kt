@@ -16,6 +16,8 @@ import androidx.appcompat.widget.Toolbar
 import androidx.core.content.FileProvider
 import mx.alxr.voicenotes.R
 import java.io.File
+import java.io.FileOutputStream
+import java.io.InputStream
 
 fun Activity.hideSoftKeyboard() {
     val token = (currentFocus ?: findViewById(android.R.id.content))?.windowToken ?: return
@@ -30,40 +32,37 @@ fun AppCompatActivity.setupToolbar(
     indicator: Drawable? = null
 ) {
     setSupportActionBar(toolbar)
-
     if (indicator != null) {
         toolbar.navigationIcon = indicator
     }
-
     supportActionBar?.apply {
         setDisplayHomeAsUpEnabled(homeAsUp)
         setDisplayShowTitleEnabled(showTitle)
     }
-
 }
 
-fun Activity.vibrate(duration:Long){
-    val vibrator  = getSystemService(Context.VIBRATOR_SERVICE) as Vibrator? ?:return
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O){
+fun Activity.vibrate(duration: Long) {
+    val vibrator = getSystemService(Context.VIBRATOR_SERVICE) as Vibrator? ?: return
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
         vibrator.vibrate(VibrationEffect.createOneShot(duration, VibrationEffect.DEFAULT_AMPLITUDE))
-    }else{
+    } else {
+        @Suppress("DEPRECATION")
         vibrator.vibrate(duration)
     }
 }
 
-fun Activity.goAppSettings(){
+fun Activity.goAppSettings() {
     val intent = Intent()
     intent.action = Settings.ACTION_APPLICATION_DETAILS_SETTINGS
     val uri = Uri.fromParts("package", packageName, null)
     intent.data = uri
-    try{
+    try {
         startActivity(intent)
-    }catch (e:Exception){
+    } catch (e: Exception) {
         Toast.makeText(this, R.string.something_went_wrong, Toast.LENGTH_SHORT).show()
     }
 
 }
-
 
 fun Activity.getFileUri(file: File): Uri {
     return FileProvider
@@ -72,5 +71,26 @@ fun Activity.getFileUri(file: File): Uri {
             "$packageName.provider",
             file
         )
+}
 
+@Suppress("unused")
+fun Activity.extractAssetsFile(filePath: String): String {
+    val cacheFolder = cacheDir ?: return ""
+    val file = File(cacheFolder, filePath)
+    if (file.exists()) return file.absolutePath
+    try {
+        val assetManager = assets ?: return ""
+        val inputStream: InputStream = assetManager.open(filePath)
+        val size = inputStream.available()
+        val buffer = ByteArray(size)
+        inputStream.read(buffer)
+        inputStream.close()
+        val fos = FileOutputStream(file)
+        fos.write(buffer)
+        fos.close()
+        return file.absolutePath
+    } catch (e: Exception) {
+        e.printStackTrace()
+        return ""
+    }
 }

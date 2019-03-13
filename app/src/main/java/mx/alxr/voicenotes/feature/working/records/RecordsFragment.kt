@@ -7,16 +7,18 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.paging.PagedList
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.google.android.material.snackbar.Snackbar
 import kotlinx.android.synthetic.main.fragment_records.*
 import mx.alxr.voicenotes.R
 import mx.alxr.voicenotes.repository.media.IMediaStorage
 import mx.alxr.voicenotes.repository.record.RecordEntity
+import mx.alxr.voicenotes.utils.errors.ErrorSolution
+import mx.alxr.voicenotes.utils.errors.Interaction
 import mx.alxr.voicenotes.utils.errors.ProjectException
 import mx.alxr.voicenotes.utils.extensions.getFileUri
 import mx.alxr.voicenotes.utils.extensions.showTripleSelectorDialog
@@ -54,9 +56,25 @@ class RecordsFragment : Fragment(), Observer<PagedList<RecordEntity>> {
     private fun onModelChange(model: Model) {
         if (!::mAdapter.isInitialized) return
         mAdapter.setState(model.playingRecordCRC32, model.progress, model.state, model.isTracking)
-        val share = model.share
-        if (share.file.isEmpty()) return
-        share(share)
+        handleError(model.solution)
+        shareRecord(model.share)
+    }
+
+    private fun handleError(solution: ErrorSolution) {
+        if (solution.message.isEmpty()) return
+        val message = solution.message
+        val interaction = solution.interaction
+        mViewModel.onErrorHandled()
+        when (interaction) {
+            Interaction.Snack -> activity?.apply {
+                Snackbar
+                    .make(findViewById(android.R.id.content), message, Snackbar.LENGTH_LONG)
+                    .show()
+            }
+            else -> {
+                throw RuntimeException("Unsupported interaction")
+            }
+        }
     }
 
     override fun onChanged(list: PagedList<RecordEntity>?) {
@@ -71,7 +89,8 @@ class RecordsFragment : Fragment(), Observer<PagedList<RecordEntity>> {
         mViewModel.pauseIfPlaying()
     }
 
-    private fun share(share: Share) {
+    private fun shareRecord(share: Share) {
+        if (share.file.isEmpty()) return
         mViewModel.onShareHandled()
         showTripleSelectorDialog(
             message = R.string.share_note_dialog_message,
@@ -90,22 +109,33 @@ class RecordsFragment : Fragment(), Observer<PagedList<RecordEntity>> {
                 try {
                     directory = mediaStorage.getDirectory()
                 } catch (e: ProjectException) {
-                    Toast.makeText(this, e.messageId, Toast.LENGTH_SHORT).show()
+                    Snackbar.make(findViewById(android.R.id.content), e.messageId, Snackbar.LENGTH_LONG).show()
                     return
                 }
                 val file = File(directory, path)
                 if (!file.exists()) {
-                    Toast.makeText(this, R.string.fetch_file_error_no_local_file, Toast.LENGTH_SHORT).show()
+                    Snackbar.make(
+                        findViewById(android.R.id.content),
+                        R.string.fetch_file_error_no_local_file,
+                        Snackbar.LENGTH_LONG
+                    ).show()
                     return
                 }
                 val uri = getFileUri(file)
                 val sharingIntent = Intent(Intent.ACTION_SEND)
                 sharingIntent.type = "text/*"
+                sharingIntent.putExtra(
+                    android.content.Intent.EXTRA_SUBJECT,
+                    String.format(getString(R.string.share_voice_file_subject), path)
+                )
+                sharingIntent.putExtra(android.content.Intent.EXTRA_TEXT, getString(R.string.share_voice_file_extra))
                 sharingIntent.putExtra(Intent.EXTRA_STREAM, uri)
                 sharingIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
                 startActivity(Intent.createChooser(sharingIntent, getString(R.string.share_voice_file_label)))
             } catch (e: Exception) {
-                Toast.makeText(this, e.localizedMessage, Toast.LENGTH_LONG).show()
+                Snackbar
+                    .make(findViewById(android.R.id.content), e.localizedMessage, Snackbar.LENGTH_LONG)
+                    .show()
             }
         }
     }
@@ -114,7 +144,9 @@ class RecordsFragment : Fragment(), Observer<PagedList<RecordEntity>> {
         if (isTranscriptionReady) {
             activity?.apply {
                 if (transcription.isEmpty()) {
-                    Toast.makeText(this, R.string.empty_message, Toast.LENGTH_LONG).show()
+                    Snackbar
+                        .make(findViewById(android.R.id.content), R.string.empty_message, Snackbar.LENGTH_LONG)
+                        .show()
                     return
                 }
                 try {
@@ -124,7 +156,9 @@ class RecordsFragment : Fragment(), Observer<PagedList<RecordEntity>> {
                     sharingIntent.putExtra(android.content.Intent.EXTRA_TEXT, transcription)
                     startActivity(Intent.createChooser(sharingIntent, getString(R.string.share_transcription_label)))
                 } catch (e: Exception) {
-                    Toast.makeText(this, e.localizedMessage, Toast.LENGTH_LONG).show()
+                    Snackbar
+                        .make(findViewById(android.R.id.content), e.localizedMessage, Snackbar.LENGTH_LONG)
+                        .show()
                 }
             }
         } else {

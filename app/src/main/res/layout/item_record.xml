@@ -110,12 +110,11 @@
             android:textSize="12sp"
             tools:text="0:01:25" />
 
-        <Space
-            android:layout_width="match_parent"
-            android:layout_height="16dp"
-            android:layout_below="@id/play_view"/>
-
     </RelativeLayout>
+
+    <Space
+        android:layout_width="match_parent"
+        android:layout_height="8dp"/>
 
     <TextView
         android:id="@+id/transcription_view"

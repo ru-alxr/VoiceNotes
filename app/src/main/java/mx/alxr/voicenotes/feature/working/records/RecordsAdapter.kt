@@ -145,7 +145,7 @@ class RecordsAdapter(
                 seek.isEnabled = false
                 seek.progress = 0
             }
-            transcription.visibility = if (entity.isTranscribed) View.VISIBLE else View.INVISIBLE
+            transcription.visibility = if (entity.isTranscribed) View.VISIBLE else View.GONE
             recognize.visibility = if (entity.isTranscribed) View.INVISIBLE else View.VISIBLE
         }
 

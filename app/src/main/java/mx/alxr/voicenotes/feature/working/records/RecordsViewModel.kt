@@ -13,7 +13,9 @@ import mx.alxr.voicenotes.feature.player.IPlayback
 import mx.alxr.voicenotes.feature.player.IPlayer
 import mx.alxr.voicenotes.repository.media.IMediaStorage
 import mx.alxr.voicenotes.repository.record.RecordEntity
+import mx.alxr.voicenotes.utils.errors.ErrorSolution
 import mx.alxr.voicenotes.utils.errors.IErrorMessageResolver
+import mx.alxr.voicenotes.utils.errors.Interaction
 import mx.alxr.voicenotes.utils.logger.ILogger
 import mx.alxr.voicenotes.utils.rx.SingleDisposable
 import java.io.File
@@ -26,6 +28,15 @@ class RecordsViewModel(
     private val logger: ILogger
 ) : ViewModel(), ICallback, IPlayback {
 
+    private val mLiveModel: MutableLiveData<Model> = MutableLiveData()
+    private val dao = db.recordDataDAO()
+    private var mDisposable: Disposable? = null
+
+    init {
+        mLiveModel.value = Model()
+        player.setPlayback(this)
+    }
+
     override fun onStartTrackingTouch() {
         val model = mLiveModel.value ?: return
         mLiveModel.value = model.copy(isTracking = true)
@@ -34,19 +45,6 @@ class RecordsViewModel(
     override fun onStopTrackingTouch() {
         val model = mLiveModel.value ?: return
         mLiveModel.value = model.copy(isTracking = false)
-    }
-
-    private val dao = db.recordDataDAO()
-
-    private var mDisposable: Disposable? = null
-
-    private var mFeatureDisposable: Disposable? = null
-
-    private val mLiveModel: MutableLiveData<Model> = MutableLiveData()
-
-    init {
-        mLiveModel.value = Model()
-        player.setPlayback(this)
     }
 
     fun getModel(): LiveData<Model> {
@@ -113,7 +111,12 @@ class RecordsViewModel(
     private fun onFileError(t: Throwable) {
         logger.with(this).add("onFileError ${resolver.resolve(t).message}").log()
         val model = mLiveModel.value ?: return
-        mLiveModel.value = model.copy(playingRecordCRC32 = -1, state = PlaybackState.Stopped)
+        mLiveModel.value = model.copy(playingRecordCRC32 = -1, state = PlaybackState.Stopped, solution = resolver.resolve(t, Interaction.Snack))
+    }
+
+    fun onErrorHandled(){
+        val model = mLiveModel.value ?: return
+        mLiveModel.value = model.copy(solution = ErrorSolution())
     }
 
     fun pauseIfPlaying() {
@@ -157,7 +160,8 @@ data class Model(
     val state: PlaybackState = PlaybackState.Stopped,
     val progress: Int = 0,
     val isTracking: Boolean = false,
-    val share:Share = Share()
+    val share:Share = Share(),
+    val solution: ErrorSolution = ErrorSolution()
 )
 
 data class Share(val file:String = "",
