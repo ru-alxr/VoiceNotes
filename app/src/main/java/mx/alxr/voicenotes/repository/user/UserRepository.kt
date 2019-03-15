@@ -6,71 +6,87 @@ import io.reactivex.schedulers.Schedulers
 import mx.alxr.voicenotes.db.AppDatabase
 import mx.alxr.voicenotes.repository.language.LanguageDAO
 import mx.alxr.voicenotes.repository.language.LanguageEntity
-import java.lang.RuntimeException
+import mx.alxr.voicenotes.repository.language.MAX_LANGUAGES
+import mx.alxr.voicenotes.repository.remote.firebaseuser.ProjectUser
+import mx.alxr.voicenotes.utils.logger.ILogger
 
-class UserRepository(db: AppDatabase) : IUserRepository {
+class UserRepository(db: AppDatabase, private val logger:ILogger) : IUserRepository {
 
     private val mUserDAO: UserDAO = db.userDataDAO()
     private val mLanguageDAO: LanguageDAO = db.languageDataDAO()
 
-    override fun getUserSingle(): Single<IUser> {
+    private fun dbchck(): Single<Unit> {
         return Single
             .fromCallable {
-                val user = mUserDAO.getUserImmediately()
-                if (user == null) {
-                    mUserDAO
-                        .insert(UserEntity(id = 1L, isAsked = false, languageCode = "", languageName = ""))
-                    mUserDAO.getUserImmediately()
-                }else{
-                    user
-                }
-            }
-    }
-
-    override fun getUser(): Flowable<IUser> {
-        return Flowable
-            .fromCallable {
-                val user = mUserDAO.getUserImmediately()
-                if (user == null) mUserDAO
-                    .insert(UserEntity(id = 1L, isAsked = false, languageCode = "", languageName = ""))
+                if (mUserDAO.getUserImmediately() == null) mUserDAO.insert(UserEntity())
                 Unit
             }
             .subscribeOn(Schedulers.io())
-            .flatMap {
-                mUserDAO.getUser()
+    }
+
+    private fun dbchckF(): Flowable<Unit> {
+        return Flowable
+            .fromCallable {
+                if (mUserDAO.getUserImmediately() == null) mUserDAO.insert(UserEntity())
             }
-            .map {
-                it[0]
-            }
+            .subscribeOn(Schedulers.io())
+    }
+
+    override fun getUserSingle(): Single<UserEntity> {
+        return dbchck().flatMap { mUserDAO.getUserSingle() }
+    }
+
+    override fun getUser(): Flowable<UserEntity> {
+        return dbchckF().flatMap { mUserDAO.getUser() }
     }
 
     override fun setUserNativeLanguage(language: LanguageEntity): Single<Unit> {
-        return Single
-            .fromCallable {
-                val user = mUserDAO.getUserImmediately()
-                user?.apply {
+        return getUserSingle()
+            .flatMap {
+                it.apply {
                     val changed = languageCode != language.code || languageName != language.name
                     if (changed) {
-                        mUserDAO.insert(copy(languageCode = language.code, languageName = language.name, isAsked = true))
-                        mLanguageDAO.insert(language.copy(position = language.position - 120))
+                        mUserDAO.insert(
+                            copy(
+                                languageCode = language.code,
+                                languageName = language.name,
+                                isLanguageRequested = true
+                            )
+                        )
+                        mLanguageDAO.insert(language.copy(position = language.position - MAX_LANGUAGES))
                     }
-                } ?: throw RuntimeException("DB has no user object")
-                Unit
+                }
+                Single.just(Unit)
             }
-            .subscribeOn(Schedulers.io())
     }
 
     override fun setNativeLanguageExplicitlyAsked(): Single<Unit> {
-        return Single
-            .fromCallable {
-                val user = mUserDAO.getUserImmediately()
-                user?.apply {
-                    val changed = !isAsked
-                    if (changed) mUserDAO.insert(copy(isAsked = true))
-                } ?: throw RuntimeException("DB has no user object")
-                Unit
+        return getUserSingle()
+            .flatMap {
+                it.apply {
+                    if (!isLanguageRequested) mUserDAO.insert(copy(isLanguageRequested = true))
+                }
+                Single.just(Unit)
             }
-            .subscribeOn(Schedulers.io())
     }
 
+    override fun update(user: ProjectUser): Single<UserEntity> {
+        return getUserSingle()
+            .flatMap {
+                val updated = it.copy(
+                    firebaseUserProvider = user.authProvider,
+                    firebaseUserId = user.uid,
+
+                    email = user.email,
+                    displayName = user.displayName,
+
+                    languageCode = user.languageCode,
+                    languageName = user.languageName,
+                    languageNameEnglish = user.languageNameEnglish
+                )
+                logger.with(this@UserRepository).add("Insert $updated").log()
+                mUserDAO.insert(updated)
+                Single.just(updated)
+            }
+    }
 }

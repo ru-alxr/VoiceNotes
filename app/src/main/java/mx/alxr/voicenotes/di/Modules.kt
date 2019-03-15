@@ -1,6 +1,7 @@
 package mx.alxr.voicenotes.di
 
 import mx.alxr.voicenotes.MainViewModel
+import mx.alxr.voicenotes.feature.auth.AuthViewModel
 import mx.alxr.voicenotes.feature.init.InitViewModel
 import mx.alxr.voicenotes.feature.player.IPlayer
 import mx.alxr.voicenotes.feature.player.Player
@@ -31,6 +32,20 @@ val FEATURE_INIT_MODULE = module {
 
 }
 
+val FEATURE_AUTH = module {
+
+    viewModel {
+        AuthViewModel(
+            navigation = get(),
+            mLogger = get(),
+            errorResolver = get(),
+            userRepository = get(),
+            remoteUserRepository = get()
+        )
+    }
+
+}
+
 val FEATURE_PRELOAD_MODULE = module {
 
     viewModel {
@@ -46,7 +61,16 @@ val FEATURE_PRELOAD_MODULE = module {
 
 val FEATURE_LANGUAGE_SELECTOR = module {
 
-    viewModel { LanguageSelectorViewModel(db = get(), nav = get(), userRepository = get(), logger = get()) }
+    viewModel {
+        LanguageSelectorViewModel(
+            db = get(),
+            nav = get(), remoteUserRepository = get(),
+            userRepository = get(),
+            errorMessageResolver = get(),
+            recordsRepository = get(),
+            logger = get()
+        )
+    }
 
 }
 
@@ -60,7 +84,17 @@ val MAIN_VIEW_MODULE = module {
 
     viewModel { WorkingViewModel(get()) }
 
-    viewModel { RecordsViewModel(db = get(), player = get(), storage = get(), resolver = get(), logger = get(), recognizer = get()) }
+    viewModel {
+        RecordsViewModel(
+            db = get(),
+            player = get(),
+            storage = get(),
+            resolver = get(),
+            logger = get(),
+            recognizer = get(),
+            navigation = get()
+        )
+    }
 
     single { Recorder(androidContext()) as IRecorder }
 

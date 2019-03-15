@@ -7,8 +7,8 @@ import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.Disposable
 import io.reactivex.schedulers.Schedulers
 import mx.alxr.voicenotes.feature.*
-import mx.alxr.voicenotes.repository.user.IUser
 import mx.alxr.voicenotes.repository.user.IUserRepository
+import mx.alxr.voicenotes.repository.user.UserEntity
 import mx.alxr.voicenotes.utils.rx.SingleDisposable
 
 class MainViewModel(
@@ -24,22 +24,26 @@ class MainViewModel(
             .getUserSingle()
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
-            .subscribeWith(SingleDisposable<IUser>(
+            .subscribeWith(SingleDisposable<UserEntity>(
                 success = {
-                    if (it.isNativeLanguageExplicitlyAsked()) {
-                        mLiveUserState.value = mLiveUserState.value?.copy(feature = FEATURE_WORKING, args = null)
-                            ?: UserState(feature = FEATURE_WORKING)
+                    val model = mLiveUserState.value ?: UserState()
+                    if (it.firebaseUserId.isEmpty() && !it.isRegistrationRequested) {
+                        mLiveUserState.value = model.copy(feature = FEATURE_AUTH, args = null)
                         return@SingleDisposable
                     }
-                    if (it.isNativeLanguageDefined()) {
-                        mLiveUserState.value = mLiveUserState.value?.copy(feature = FEATURE_WORKING, args = null)
-                            ?: UserState(feature = FEATURE_WORKING)
+                    if (it.isLanguageRequested) {
+                        mLiveUserState.value = model.copy(feature = FEATURE_WORKING, args = null)
                         return@SingleDisposable
                     }
-                    mLiveUserState.value = mLiveUserState.value?.copy(feature = FEATURE_PRELOAD, args = null)
-                        ?: UserState(feature = FEATURE_PRELOAD)
+                    if (!it.languageCode.isEmpty()) {
+                        mLiveUserState.value = model.copy(feature = FEATURE_WORKING, args = null)
+                        return@SingleDisposable
+                    }
+                    mLiveUserState.value = model.copy(feature = FEATURE_PRELOAD, args = null)
                 },
-                error = {}
+                error = {
+                    it.printStackTrace()
+                }
             )
             )
     }

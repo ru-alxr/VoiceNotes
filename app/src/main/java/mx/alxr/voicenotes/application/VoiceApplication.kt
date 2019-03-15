@@ -20,6 +20,7 @@ class VoiceApplication : Application() {
             this,
             listOf(
                 APPLICATION_MODULE,
+                FEATURE_AUTH,
                 FEATURE_INIT_MODULE,
                 FEATURE_PRELOAD_MODULE,
                 FEATURE_LANGUAGE_SELECTOR,
@@ -31,6 +32,7 @@ class VoiceApplication : Application() {
 
     private fun addUndeliverableErrorHandler() {
         RxJavaPlugins.setErrorHandler { e ->
+            mDebugLogger.with(this).add("Error $e").log()
             if (e is UndeliverableException) return@setErrorHandler
             throw e as Exception
         }

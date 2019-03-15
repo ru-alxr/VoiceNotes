@@ -8,6 +8,7 @@ class SingleDisposable<T>(private val success: (T) -> Unit, private val error: (
     }
 
     override fun onError(e: Throwable) {
+        e.printStackTrace()
         error.invoke(e)
     }
 }

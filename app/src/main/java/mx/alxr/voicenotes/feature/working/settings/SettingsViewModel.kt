@@ -25,7 +25,7 @@ class SettingsViewModel(userRepository: IUserRepository,
             .observeOn(AndroidSchedulers.mainThread())
             .doOnNext {
                 it?.apply {
-                    mLiveModel.value = mLiveModel.value?.copy(language = getNativeLanguage())
+                    mLiveModel.value = mLiveModel.value?.copy(language = languageName)
                 }
 
             }

@@ -108,8 +108,13 @@ class Player(private val logger: ILogger) : IPlayer, MediaPlayer.OnErrorListener
     override fun pause() {
         cleanSchedule()
         if (!::mediaPlayer.isInitialized) return
-        if (mediaPlayer.isPrepared) mediaPlayer.pause()
-        progress = mediaPlayer.currentPosition
+        if (mediaPlayer.isPrepared) {
+            logger.with(this).add("STATE: ${mediaPlayer.state()}").log()
+            if (!mediaPlayer.isReleased && !mediaPlayer.isReset) {
+                mediaPlayer.pause()
+                progress = mediaPlayer.currentPosition
+            }
+        }
         mPlayback?.onProgress(progress)
     }
 

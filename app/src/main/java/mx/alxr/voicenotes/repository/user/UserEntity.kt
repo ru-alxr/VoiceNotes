@@ -5,30 +5,17 @@ import androidx.room.PrimaryKey
 
 @Entity(tableName = "user")
 data class UserEntity(
-    @PrimaryKey val id: Long,
-    val languageName: String,
-    val languageCode: String,
-    val isAsked: Boolean
-) : IUser {
+    @PrimaryKey val id: Long = 1,
+    val languageName: String = "",
+    val languageCode: String = "",
+    val languageNameEnglish: String = "",
 
-    override fun isNativeLanguageDefined(): Boolean {
-        return !languageName.isEmpty()
-    }
+    val isLanguageRequested:Boolean = false,
+    val isRegistrationRequested:Boolean = false,
 
-    override fun getNativeLanguage(): String {
-        return languageName
-    }
+    val firebaseUserId: String = "",
+    val firebaseUserProvider:String = "",
 
-    override fun isNativeLanguageExplicitlyAsked(): Boolean {
-        return isAsked
-    }
-
-    override fun getNativeLanguageCode(): String {
-        return languageCode
-    }
-
-    override fun isRegistered(): Boolean {
-        return false
-    }
-
-}
+    val displayName:String = "",
+    val email:String = ""
+)

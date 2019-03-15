@@ -12,6 +12,7 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import kotlinx.android.synthetic.main.fragment_preload.*
 import mx.alxr.voicenotes.PAYLOAD_1
+import mx.alxr.voicenotes.PAYLOAD_2
 import mx.alxr.voicenotes.R
 import mx.alxr.voicenotes.utils.extensions.showDualSelectorDialog
 import mx.alxr.voicenotes.utils.logger.ILogger
@@ -33,7 +34,9 @@ class PreloadFragment : Fragment(), Observer<Model> {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         mLogger.with(this).add("onViewCreated").log()
-        if (arguments?.get(PAYLOAD_1) is Boolean) mViewModel.setSelectionFlag()
+        if (arguments?.get(PAYLOAD_1) is Boolean){
+            mViewModel.setSelectionFlag(arguments?.get(PAYLOAD_2))
+        }
         mViewModel.getModel().observe(this, this)
     }
 

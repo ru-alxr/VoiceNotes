@@ -13,10 +13,14 @@ import com.jakewharton.rxbinding2.widget.textChanges
 import io.reactivex.android.schedulers.AndroidSchedulers
 import kotlinx.android.synthetic.main.fragment_native_language_selector.*
 import mx.alxr.voicenotes.PAYLOAD_1
+import mx.alxr.voicenotes.PAYLOAD_2
 import mx.alxr.voicenotes.R
 import mx.alxr.voicenotes.repository.language.LanguageEntity
+import mx.alxr.voicenotes.utils.errors.ErrorSolution
+import mx.alxr.voicenotes.utils.errors.Interaction
 import mx.alxr.voicenotes.utils.extensions.hideSoftKeyboard
 import mx.alxr.voicenotes.utils.extensions.setupToolbar
+import mx.alxr.voicenotes.utils.extensions.shackBar
 import mx.alxr.voicenotes.utils.logger.ILogger
 import org.koin.android.ext.android.inject
 import org.koin.android.viewmodel.ext.android.viewModel
@@ -32,7 +36,9 @@ class NativeLanguageSelectorFragment : Fragment(), Observer<PagedList<LanguageEn
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        if (arguments?.get(PAYLOAD_1) is Boolean) mViewModel.setSelectionFlag()
+        if (arguments?.get(PAYLOAD_1) is Boolean){
+            mViewModel.setSelectionFlag(arguments?.get(PAYLOAD_2))
+        }
         recycler_view.layoutManager = LinearLayoutManager(activity)
         mAdapter = LanguageAdapter(mLayoutInflater, logger = mLogger, callback = this)
         onQueryChange("")
@@ -56,6 +62,21 @@ class NativeLanguageSelectorFragment : Fragment(), Observer<PagedList<LanguageEn
             setupToolbar(toolbar_view, showTitle = true, homeAsUp = false)
         }
         setHasOptionsMenu(true)
+        mViewModel.getModel().observe(this, mModelChangeObserver)
+    }
+
+    private val mModelChangeObserver = Observer<Model> {
+        if (it == null) return@Observer
+        handleError(it.solution)
+    }
+
+    private fun handleError(solution: ErrorSolution) {
+        if (solution.message.isEmpty()) return
+        mViewModel.onErrorSolutionApplied()
+        when (solution.interaction) {
+            Interaction.Snack -> activity?.shackBar(solution.message)
+            else -> throw RuntimeException("Unsupported interaction")
+        }
     }
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {

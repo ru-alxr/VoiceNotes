@@ -15,47 +15,65 @@
         android:paddingEnd="8dp">
 
         <LinearLayout
+            android:id="@+id/icons_container"
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
-            android:orientation="horizontal"
             android:layout_alignParentEnd="true"
-            android:id="@+id/icons_container">
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/language_view"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:layout_gravity="center"
+                android:layout_margin="2dp"
+                android:background="@drawable/item_language"
+                android:ellipsize="end"
+                android:fontFamily="@font/helvetica_bold"
+                android:gravity="center"
+                android:minWidth="52dp"
+                android:paddingStart="4dp"
+                android:paddingEnd="4dp"
+                android:singleLine="true"
+                android:textColor="@color/main_text_color"
+                android:textSize="12sp"
+                tools:text="EN" />
 
             <ImageView
                 android:id="@+id/share_record_view"
                 android:layout_width="56dp"
                 android:layout_height="40dp"
-                android:src="@drawable/ic_share_normal"
-                tools:ignore="ContentDescription"
-                android:paddingTop="8dp"
-                android:paddingBottom="8dp"
+                android:layout_gravity="center_vertical"
                 android:paddingStart="16dp"
+                android:paddingTop="8dp"
                 android:paddingEnd="16dp"
-                android:layout_gravity="center_vertical"/>
+                android:paddingBottom="8dp"
+                android:src="@drawable/ic_share_normal"
+                tools:ignore="ContentDescription" />
 
             <ImageView
                 android:id="@+id/recognize_voice_view"
                 android:layout_width="56dp"
                 android:layout_height="40dp"
-                android:src="@drawable/ic_cloud_computing_2"
-                tools:ignore="ContentDescription"
-                android:paddingTop="8dp"
-                android:paddingBottom="8dp"
+                android:layout_gravity="center_vertical"
                 android:paddingStart="16dp"
+                android:paddingTop="8dp"
                 android:paddingEnd="16dp"
-                android:layout_gravity="center_vertical"/>
+                android:paddingBottom="8dp"
+                android:src="@drawable/ic_cloud_computing_2"
+                tools:ignore="ContentDescription" />
 
             <ImageView
                 android:id="@+id/synchronization_status_view"
                 android:layout_width="56dp"
                 android:layout_height="40dp"
-                android:src="@drawable/ic_cloud_computing_synchronization_selector"
-                tools:ignore="ContentDescription"
-                android:paddingTop="8dp"
-                android:paddingBottom="8dp"
+                android:layout_gravity="center_vertical"
                 android:paddingStart="16dp"
+                android:paddingTop="8dp"
                 android:paddingEnd="16dp"
-                android:layout_gravity="center_vertical"/>
+                android:paddingBottom="8dp"
+                android:src="@drawable/ic_cloud_computing_synchronization_selector"
+                tools:ignore="ContentDescription" />
 
         </LinearLayout>
 
@@ -63,13 +81,13 @@
             android:id="@+id/date_view"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
+            android:layout_toStartOf="@id/icons_container"
             android:ellipsize="end"
             android:gravity="start|center_vertical"
             android:singleLine="true"
             android:textColor="@color/main_text_color"
             android:textSize="14sp"
-            tools:text="3/10/2019 13:08:00"
-            android:layout_toStartOf="@id/icons_container"/>
+            tools:text="3/10/2019 13:08:00" />
 
     </RelativeLayout>
 
@@ -114,17 +132,17 @@
 
     <Space
         android:layout_width="match_parent"
-        android:layout_height="8dp"/>
+        android:layout_height="8dp" />
 
     <TextView
         android:id="@+id/transcription_view"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_marginBottom="16dp"
         android:paddingStart="8dp"
         android:paddingEnd="8dp"
         android:textColor="@color/main_text_color"
         android:textSize="14sp"
-        tools:text="@string/lorem"
-        android:layout_marginBottom="16dp"/>
+        tools:text="@string/lorem" />
 
 </LinearLayout>

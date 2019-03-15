@@ -39,4 +39,9 @@ class CustomMediaPlayer() : MediaPlayer() {
         super.reset()
         isReset = true
     }
+
+    fun state():String{
+        return "isPrepared=$isPrepared isReleased=$isReleased isStopped=$isStopped isPaused=$isPaused isReset=$isReset"
+    }
+
 }

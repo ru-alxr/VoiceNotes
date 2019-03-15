@@ -13,7 +13,7 @@ import mx.alxr.voicenotes.R
 import mx.alxr.voicenotes.repository.record.RecordEntity
 import mx.alxr.voicenotes.utils.logger.ILogger
 import mx.alxr.voicenotes.utils.widgets.CheckableImageView
-import java.text.SimpleDateFormat
+import java.text.DateFormat
 import java.util.*
 import java.util.concurrent.TimeUnit
 
@@ -41,7 +41,13 @@ class RecordsAdapter(
         recyclerView.post { notifyDataSetChanged() }
     }
 
-    private val dateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
+    //    private val dateFormat = SimpleDateFormat("MMM dd HH:mm:ss", Locale.getDefault())
+    private val dateFormat = DateFormat
+        .getDateTimeInstance(
+            DateFormat.SHORT,
+            DateFormat.SHORT,
+            Locale.getDefault()
+        )
 
     private fun isCurrentRecord(entity: RecordEntity): Boolean {
         return entity.crc32 == mCheckedId
@@ -101,7 +107,8 @@ class RecordsAdapter(
         private val duration: TextView = view.findViewById(R.id.duration_view),
         private val transcription: TextView = view.findViewById(R.id.transcription_view),
         private val recognize: ImageView = view.findViewById(R.id.recognize_voice_view),
-        private val share:View = view.findViewById(R.id.share_record_view)
+        private val share: View = view.findViewById(R.id.share_record_view),
+        private val language: TextView = view.findViewById(R.id.language_view)
 
     ) : RecyclerView.ViewHolder(view), View.OnClickListener {
 
@@ -110,18 +117,20 @@ class RecordsAdapter(
             status.setOnClickListener(this)
             recognize.setOnClickListener(this)
             share.setOnClickListener(this)
+            language.setOnClickListener(this)
             seek.setOnSeekBarChangeListener(this@RecordsAdapter)
         }
 
         override fun onClick(v: View?) {
             val position = adapterPosition
             if (position.invalid()) return
-            getItem(position)?.apply{
+            getItem(position)?.apply {
                 when (v) {
                     play -> callback.onPlayButtonClick(this)
                     share -> callback.requestShare(this)
                     recognize -> callback.requestGetTranscription(this)
                     status -> callback.requestSynchronize(this)
+                    language -> callback.requestLanguageChange(this)
                 }
             }
         }
@@ -147,6 +156,8 @@ class RecordsAdapter(
             }
             transcription.visibility = if (entity.isTranscribed) View.VISIBLE else View.GONE
             recognize.visibility = if (entity.isTranscribed) View.INVISIBLE else View.VISIBLE
+
+            language.text = entity.languageCode.replace("-", " | ")
         }
 
         private fun setDuration(d: Number) {

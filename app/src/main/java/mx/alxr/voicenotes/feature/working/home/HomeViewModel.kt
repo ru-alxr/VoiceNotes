@@ -32,7 +32,7 @@ class HomeViewModel(
             .observeOn(AndroidSchedulers.mainThread())
             .doOnNext {
                 it?.apply {
-                    mLiveModel.value = mLiveModel.value?.copy(language = getNativeLanguage(), languageCode = getNativeLanguageCode())
+                    mLiveModel.value = mLiveModel.value?.copy(language = languageName, languageCode = languageCode)
                 }
 
             }

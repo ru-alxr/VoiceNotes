@@ -11,6 +11,7 @@ import mx.alxr.voicenotes.feature.FEATURE_SELECT_NATIVE_LANGUAGE
 import mx.alxr.voicenotes.feature.FEATURE_WORKING
 import mx.alxr.voicenotes.feature.IFeatureNavigation
 import mx.alxr.voicenotes.repository.language.ILanguageRepository
+import mx.alxr.voicenotes.repository.record.RecordTag
 import mx.alxr.voicenotes.utils.errors.ErrorSolution
 import mx.alxr.voicenotes.utils.errors.IErrorMessageResolver
 import mx.alxr.voicenotes.utils.errors.Interaction
@@ -79,15 +80,19 @@ class PreloadViewModel(
     private fun onPreloadSuccess(t: Unit) {
         mLiveModel.value?.apply {
             if (selectionFlag) {
-                navigation.navigateFeature(FEATURE_SELECT_NATIVE_LANGUAGE, true)
+                if (tag is Long){
+                    navigation.navigateFeature(FEATURE_SELECT_NATIVE_LANGUAGE, RecordTag(tag))
+                }else{
+                    navigation.navigateFeature(FEATURE_SELECT_NATIVE_LANGUAGE, true)
+                }
             } else {
                 navigation.navigateFeature(FEATURE_SELECT_NATIVE_LANGUAGE)
             }
         }
     }
 
-    fun setSelectionFlag() {
-        mLiveModel.value?.apply { mLiveModel.value = copy(selectionFlag = true) }
+    fun setSelectionFlag(tag:Any?) {
+        mLiveModel.value?.apply { mLiveModel.value = copy(selectionFlag = true, tag = tag) }
     }
 
 }
@@ -95,5 +100,6 @@ class PreloadViewModel(
 data class Model(
     val isInProgress: Boolean = false,
     val selectionFlag: Boolean = false,
+    val tag:Any? = null,
     val solution: ErrorSolution = ErrorSolution()
 )

@@ -23,3 +23,5 @@ data class RecordEntity(
         }
     }
 }
+
+data class RecordTag(val crc32: Long)

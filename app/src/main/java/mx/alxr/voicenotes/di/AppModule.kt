@@ -1,6 +1,7 @@
 package mx.alxr.voicenotes.di
 
 import android.view.LayoutInflater
+import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.remoteconfig.FirebaseRemoteConfig
 import com.google.firebase.remoteconfig.FirebaseRemoteConfigSettings
 import mx.alxr.voicenotes.application.getAppLogger
@@ -14,6 +15,8 @@ import mx.alxr.voicenotes.repository.gca.GoogleCloudApiKeyRepository
 import mx.alxr.voicenotes.repository.gca.IGoogleCloudApiKeyRepository
 import mx.alxr.voicenotes.repository.language.ILanguageRepository
 import mx.alxr.voicenotes.repository.language.LanguageRepository
+import mx.alxr.voicenotes.repository.remote.firebaseuser.IRemoteUserRepository
+import mx.alxr.voicenotes.repository.remote.firebaseuser.RemoteUserRepository
 import mx.alxr.voicenotes.repository.user.IUserRepository
 import mx.alxr.voicenotes.repository.user.UserRepository
 import mx.alxr.voicenotes.utils.errors.ErrorMessageResolver
@@ -27,9 +30,9 @@ val APPLICATION_MODULE = module {
 
     single { androidContext().getAppLogger() }
 
-    single { LayoutInflater.from(androidContext())}
+    single { LayoutInflater.from(androidContext()) }
 
-    single { UserRepository(db = get()) as IUserRepository }
+    single { UserRepository(db = get(), logger = get()) as IUserRepository }
 
     single(createOnStart = true) { AppDatabase.getInstance(androidContext()) as AppDatabase }
 
@@ -46,6 +49,10 @@ val APPLICATION_MODULE = module {
     single { getRemoteConfig() }
 
     single { ConfigRepository(config = get(), seconds = 60L) as IConfigRepository }
+
+    single { FirebaseFirestore.getInstance() }
+
+    single { RemoteUserRepository(store = get(), logger = get()) as IRemoteUserRepository }
 
 }
 

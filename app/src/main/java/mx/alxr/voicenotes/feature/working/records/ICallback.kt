@@ -13,5 +13,6 @@ interface ICallback {
     fun requestGetTranscription(entity: RecordEntity)
 
     fun requestSynchronize(entity: RecordEntity)
+    fun requestLanguageChange(recordEntity: RecordEntity)
 
 }

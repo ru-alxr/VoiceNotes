@@ -15,6 +15,7 @@
     <color name="cancel_record_background">#f21800</color>
 
     <color name="record_background">#cbeac6</color>
+    <color name="record_language_stroke_color">#D81B60</color>
 
 
 </resources>

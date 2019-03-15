@@ -5,12 +5,16 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import io.reactivex.Flowable
+import io.reactivex.Single
 
 @Dao
 interface UserDAO {
 
     @Query("SELECT * FROM user WHERE id = 1")
-    fun getUser(): Flowable<List<UserEntity>>
+    fun getUser(): Flowable<UserEntity>
+
+    @Query("SELECT * FROM user WHERE id = 1")
+    fun getUserSingle(): Single<UserEntity>
 
     @Query("SELECT * FROM user WHERE id = 1")
     fun getUserImmediately(): UserEntity?

@@ -6,6 +6,7 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy.REPLACE
 import androidx.room.Query
 import io.reactivex.Flowable
+import io.reactivex.Single
 
 @Dao
 interface RecordDAO {
@@ -15,6 +16,9 @@ interface RecordDAO {
 
     @Query("SELECT * FROM records WHERE fileName = :name AND crc32 = :crc32")
     fun getRecord(name: String, crc32: String): Flowable<List<RecordEntity>>
+
+    @Query("SELECT * FROM records WHERE crc32 = :crc32")
+    fun getRecordSingle(crc32: String): Single<List<RecordEntity>>
 
     @Insert(onConflict = REPLACE)
     fun insert(record: RecordEntity)

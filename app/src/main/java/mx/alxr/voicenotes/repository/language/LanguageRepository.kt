@@ -5,12 +5,14 @@ import io.reactivex.schedulers.Schedulers
 import mx.alxr.voicenotes.R
 import mx.alxr.voicenotes.db.AppDatabase
 import mx.alxr.voicenotes.repository.config.IConfigRepository
+import mx.alxr.voicenotes.repository.user.UserDAO
 import mx.alxr.voicenotes.utils.errors.ProjectException
 import mx.alxr.voicenotes.utils.logger.ILogger
 import org.json.JSONArray
 import org.json.JSONObject
 import java.util.*
 
+const val MAX_LANGUAGES = 1000
 /**
  * List of languages is here: https://cloud.google.com/speech-to-text/docs/languages
  */
@@ -20,12 +22,13 @@ class LanguageRepository(
     db: AppDatabase
 ) : ILanguageRepository {
 
-    private val mUserDAO: LanguageDAO = db.languageDataDAO()
+    private val mLanguageDAO: LanguageDAO = db.languageDataDAO()
+    private val mUserDAO: UserDAO = db.userDataDAO()
 
     override fun loadAvailableLanguages(): Single<Unit> {
         return Single
             .fromCallable {
-                val count = mUserDAO.getCount()
+                val count = mLanguageDAO.getCount()
                 count > 0
             }
             .flatMap {
@@ -40,6 +43,8 @@ class LanguageRepository(
             .getLanguages()
             .flatMap {
                 try {
+                    val user = mUserDAO.getUserImmediately()
+                    val userLanguageCode = user?.languageCode ?: ""
                     val current = Locale.getDefault().toString().replace("_", "-")
                     logger.with(this).add("LOCALE $current").log()
                     val array = JSONArray(it)
@@ -50,12 +55,17 @@ class LanguageRepository(
                         val lang: JSONObject = array[index] as? JSONObject ?: continue
                         val code = lang.optString("code") ?: continue
                         val orderToApply: Int = if (code == current) -1 else ++order
-                        val entity = lang.toLang(orderToApply) ?: continue
+                        val entity: LanguageEntity
+                        entity = if (userLanguageCode == code || code == "en_US") {
+                            lang.toLang(orderToApply - MAX_LANGUAGES) ?: continue
+                        } else {
+                            lang.toLang(orderToApply) ?: continue
+                        }
                         languages.add(entity)
                     }
                     if (languages.isEmpty()) throw NullPointerException()
                     logger.with(this).add("Insert ${languages.size} languages").log()
-                    mUserDAO.insert(languages)
+                    mLanguageDAO.insert(languages)
                 } catch (e: Exception) {
                     logger.with(this).add("Parse language list error $e").log()
                     throw ProjectException(R.string.fetching_supported_languages_list_error)
@@ -69,9 +79,7 @@ class LanguageRepository(
             val code: String = getString("code")
             val name: String = getString("name")
             val nameEng: String = getString("name_en")
-            logger.with(this).add("Parse  $this").log()
             val l = LanguageEntity(code = code, name = name, nameEng = nameEng, position = order)
-            logger.with(this).add("Parse result is $l").log()
             l
         } catch (e: Exception) {
             logger.with(this).add("Parse language error $e").log()

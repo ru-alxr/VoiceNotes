@@ -46,7 +46,7 @@ class Recognizer(
         return userRepository
             .getUserSingle()
             .flatMap {
-                if (!it.isRegistered()) throw ProjectException(R.string.error_registration_required)
+                if (it.firebaseUserId.isEmpty()) throw ProjectException(R.string.error_registration_required)
                 Single.just(Unit)
             }
     }

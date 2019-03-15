@@ -9,12 +9,15 @@ import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.Disposable
 import io.reactivex.schedulers.Schedulers
 import mx.alxr.voicenotes.db.AppDatabase
+import mx.alxr.voicenotes.feature.FEATURE_PRELOAD
+import mx.alxr.voicenotes.feature.IFeatureNavigation
 import mx.alxr.voicenotes.feature.player.IPlayback
 import mx.alxr.voicenotes.feature.player.IPlayer
 import mx.alxr.voicenotes.feature.recognizer.IRecognizer
 import mx.alxr.voicenotes.feature.recognizer.TranscriptionArgs
 import mx.alxr.voicenotes.repository.media.IMediaStorage
 import mx.alxr.voicenotes.repository.record.RecordEntity
+import mx.alxr.voicenotes.repository.record.RecordTag
 import mx.alxr.voicenotes.utils.errors.ErrorSolution
 import mx.alxr.voicenotes.utils.errors.IErrorMessageResolver
 import mx.alxr.voicenotes.utils.errors.Interaction
@@ -28,7 +31,8 @@ class RecordsViewModel(
     private val storage: IMediaStorage,
     private val resolver: IErrorMessageResolver,
     private val logger: ILogger,
-    private val recognizer: IRecognizer
+    private val recognizer: IRecognizer,
+    private val navigation: IFeatureNavigation
 ) : ViewModel(), ICallback, IPlayback {
 
     private val mLiveModel: MutableLiveData<Model> = MutableLiveData()
@@ -204,6 +208,9 @@ class RecordsViewModel(
 
     }
 
+    override fun requestLanguageChange(recordEntity: RecordEntity) {
+        navigation.navigateFeature(FEATURE_PRELOAD, RecordTag(recordEntity.crc32))
+    }
 
 }
 

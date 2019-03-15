@@ -78,4 +78,25 @@
         app:popEnterAnim="@anim/fragment_popup_appear"
         app:popExitAnim="@anim/fragment_popup_disappear"/>
 
+    <action
+        android:id="@+id/action_auth_user"
+        app:destination="@id/authFragment"
+        app:enterAnim="@anim/fragment_appear_from_right_to_left"
+        app:exitAnim="@anim/fragment_disappear_from_right_to_left"
+        app:popEnterAnim="@anim/fragment_popup_appear"
+        app:popExitAnim="@anim/fragment_popup_disappear"/>
+
+    <action
+        android:id="@+id/action_to_auth_user"
+        app:destination="@id/authFragment"
+        app:launchSingleTop="true"
+        app:popUpTo="@+id/nav_graph_id"
+        app:popUpToInclusive="true"/>
+
+    <fragment
+        android:id="@+id/authFragment"
+        android:name="mx.alxr.voicenotes.feature.auth.AuthFragment"
+        android:label="AuthFragment"
+        tools:layout="@layout/fragment_auth"/>
+
 </navigation>

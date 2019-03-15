@@ -1,5 +1,6 @@
 package mx.alxr.voicenotes.utils.errors
 
+import com.google.firebase.firestore.FirebaseFirestoreException
 import mx.alxr.voicenotes.R
 import mx.alxr.voicenotes.utils.resources.IStringResources
 import java.net.UnknownHostException
@@ -33,6 +34,7 @@ class ErrorMessageResolver(val resources: IStringResources) : IErrorMessageResol
             is java.net.SocketTimeoutException -> resources.getString(R.string.no_network_error)
             is ProjectException -> resources.getString(throwable.messageId)
 
+            is FirebaseFirestoreException -> resources.getString(R.string.no_network_error)
             else -> resources.getString(R.string.something_went_wrong)
         }
     }

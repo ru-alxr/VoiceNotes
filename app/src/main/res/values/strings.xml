@@ -81,5 +81,12 @@
     <string name="of">of</string>
     <string name="remaining_coins">remaining %s coins</string>
     <string name="attention_required">Attention required</string>
+    <string name="auth">AUTH</string>
+
+    <string name="auth_title">Authorization</string>
+    <string name="auth_fail">Authorization failed</string>
+
+    <string name="sorry_cannot_skip">Sorry, you cannot skip it…</string>
+    <string name="error_no_records">Error: no record</string>
 
 </resources>

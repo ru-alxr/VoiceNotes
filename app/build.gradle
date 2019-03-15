@@ -96,6 +96,12 @@ dependencies {
     // Runtime permissions
     def permissionsVersion = "5.0.0"
     implementation "com.karumi:dexter:$permissionsVersion"
+
+    // Firebase Auth UI
+    implementation 'com.firebaseui:firebase-ui-auth:4.3.1'
+
+    // Firestore
+    implementation 'com.google.firebase:firebase-firestore:18.1.0'
 }
 
 apply plugin: 'com.google.gms.google-services'
