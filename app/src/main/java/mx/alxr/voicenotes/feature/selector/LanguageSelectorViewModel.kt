@@ -103,9 +103,15 @@ class LanguageSelectorViewModel(
             if (tag == null) {
                 mDisposable = userRepository
                     .getUserSingle()
-                    .flatMap { remoteUserRepository.change(UserChangeSet(it.firebaseUserId, language.map())) }
-                    .flatMap { userRepository.update(it) }
-                    .flatMap { Single.just(Unit) }
+                    .flatMap {
+                        if (it.languageCode == language.code) {
+                            Single.just(Unit)
+                        } else {
+                            remoteUserRepository.change(UserChangeSet(it.firebaseUserId, language.map()))
+                                .flatMap { userRepository.update(it) }
+                                .flatMap { Single.just(Unit) }
+                        }
+                    }
                     .subscribeOn(Schedulers.io())
                     .observeOn(AndroidSchedulers.mainThread())
                     .subscribeWith(SingleDisposable<Unit>(

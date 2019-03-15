@@ -6,6 +6,7 @@ import androidx.lifecycle.Observer
 import androidx.navigation.NavController
 import androidx.navigation.Navigation
 import mx.alxr.voicenotes.feature.*
+import mx.alxr.voicenotes.feature.synchronizer.ISynchronizer
 import mx.alxr.voicenotes.repository.record.RecordEntity
 import mx.alxr.voicenotes.repository.record.RecordTag
 import mx.alxr.voicenotes.utils.extensions.hideSoftKeyboard
@@ -21,6 +22,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var mNavController: NavController
     private val mViewModel: MainViewModel by viewModel()
     private val mLogger: ILogger by inject()
+    private val mSynchronizer: ISynchronizer by inject()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -72,6 +74,15 @@ class MainActivity : AppCompatActivity() {
         hideSoftKeyboard()
     }
 
+    override fun onStart() {
+        super.onStart()
+        mSynchronizer.onStart()
+    }
+
+    override fun onStop() {
+        super.onStop()
+        mSynchronizer.onStop()
+    }
 }
 
 fun UserState.create(): Bundle {

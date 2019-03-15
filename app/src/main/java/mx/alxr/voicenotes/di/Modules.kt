@@ -12,6 +12,8 @@ import mx.alxr.voicenotes.feature.recorder.FILE_EXTENSION
 import mx.alxr.voicenotes.feature.recorder.IRecorder
 import mx.alxr.voicenotes.feature.recorder.Recorder
 import mx.alxr.voicenotes.feature.selector.LanguageSelectorViewModel
+import mx.alxr.voicenotes.feature.synchronizer.ISynchronizer
+import mx.alxr.voicenotes.feature.synchronizer.Synchronizer
 import mx.alxr.voicenotes.feature.working.WorkingViewModel
 import mx.alxr.voicenotes.feature.working.home.HomeViewModel
 import mx.alxr.voicenotes.feature.working.records.RecordsViewModel
@@ -100,12 +102,14 @@ val MAIN_VIEW_MODULE = module {
 
     single { MediaStorage(recordsRepository = get(), extension = FILE_EXTENSION) as IMediaStorage }
 
-    single { RecordsRepository(db = get(), logger = get()) as IRecordsRepository }
+    single { RecordsRepository(db = get(), logger = get(), repo = get()) as IRecordsRepository }
 
     single { Player(get()) as IPlayer }
 
     single { Recognizer(mediaStorage = get(), userRepository = get(), walletRepository = get()) as IRecognizer }
 
     single { WalletRepository() as IWalletRepository }
+
+    single { Synchronizer(db = get(), store = get(), logger = get()) as ISynchronizer }
 
 }

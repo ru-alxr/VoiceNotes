@@ -80,7 +80,6 @@ class RemoteUserRepository(
             .collection("users")
             .document(extractedUser.uid)
             .set(user)
-            .continueWith { }
             .addOnSuccessListener {
                 getUserTask(UserWrapper(extractedUser.uid, extractedUser), emitter)
             }

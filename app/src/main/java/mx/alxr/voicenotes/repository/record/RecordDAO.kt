@@ -32,4 +32,7 @@ interface RecordDAO {
     @Query("SELECT * FROM records ORDER BY date DESC")
     fun getAllPaged(): DataSource.Factory<Int, RecordEntity>
 
+    @Query("SELECT * FROM records WHERE isSynchronized = :isSynchronized")
+    fun getAll(isSynchronized:Boolean):Flowable<List<RecordEntity>>
+
 }

@@ -28,4 +28,7 @@ interface LanguageDAO {
     @Query("SELECT COUNT(code) FROM languages")
     fun getCount(): Int
 
+    @Query("SELECT * FROM languages WHERE code =:code")
+    fun getLanguage(code:String):LanguageEntity?
+
 }

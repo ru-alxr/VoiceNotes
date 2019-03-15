@@ -10,7 +10,7 @@ import mx.alxr.voicenotes.repository.language.MAX_LANGUAGES
 import mx.alxr.voicenotes.repository.remote.firebaseuser.ProjectUser
 import mx.alxr.voicenotes.utils.logger.ILogger
 
-class UserRepository(db: AppDatabase, private val logger:ILogger) : IUserRepository {
+class UserRepository(db: AppDatabase, private val logger: ILogger) : IUserRepository {
 
     private val mUserDAO: UserDAO = db.userDataDAO()
     private val mLanguageDAO: LanguageDAO = db.languageDataDAO()
@@ -86,6 +86,13 @@ class UserRepository(db: AppDatabase, private val logger:ILogger) : IUserReposit
                 )
                 logger.with(this@UserRepository).add("Insert $updated").log()
                 mUserDAO.insert(updated)
+
+                if (!user.languageCode.isEmpty()) {
+                    val language = mLanguageDAO.getLanguage(user.languageCode)
+                    language?.apply {
+                        mLanguageDAO.insert(copy(position = position - MAX_LANGUAGES))
+                    }
+                }
                 Single.just(updated)
             }
     }
