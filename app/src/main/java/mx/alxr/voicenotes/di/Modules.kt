@@ -110,6 +110,6 @@ val MAIN_VIEW_MODULE = module {
 
     single { WalletRepository() as IWalletRepository }
 
-    single { Synchronizer(db = get(), store = get(), logger = get()) as ISynchronizer }
+    single { Synchronizer(db = get(), firestore = get(), logger = get(), storage =get(), mediaStorage = get() ) as ISynchronizer }
 
 }

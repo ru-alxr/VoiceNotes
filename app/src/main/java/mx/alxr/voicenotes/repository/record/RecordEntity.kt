@@ -15,7 +15,9 @@ data class RecordEntity(
     val isTranscribed: Boolean = false,
     val isSynchronized: Boolean = false,
     val languageCode: String,
-    val userId:String
+    val userId:String,
+
+    val fileUploaded:Boolean = false
 ) {
 
     fun getTag(): HashMap<String, String> {

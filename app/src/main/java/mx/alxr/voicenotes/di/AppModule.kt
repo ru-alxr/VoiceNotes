@@ -4,6 +4,7 @@ import android.view.LayoutInflater
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.remoteconfig.FirebaseRemoteConfig
 import com.google.firebase.remoteconfig.FirebaseRemoteConfigSettings
+import com.google.firebase.storage.FirebaseStorage
 import mx.alxr.voicenotes.application.getAppLogger
 import mx.alxr.voicenotes.db.AppDatabase
 import mx.alxr.voicenotes.feature.FeatureNavigation
@@ -51,6 +52,8 @@ val APPLICATION_MODULE = module {
     single { ConfigRepository(config = get(), seconds = 60L) as IConfigRepository }
 
     single { FirebaseFirestore.getInstance() }
+
+    single { FirebaseStorage.getInstance() }
 
     single { RemoteUserRepository(store = get(), logger = get()) as IRemoteUserRepository }
 

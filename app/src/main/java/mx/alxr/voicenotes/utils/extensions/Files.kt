@@ -1,5 +1,6 @@
 package mx.alxr.voicenotes.utils.extensions
 
+import mx.alxr.voicenotes.utils.extensions.FileUtils.generateMD5
 import java.io.File
 import java.io.FileInputStream
 import java.util.zip.CRC32
@@ -12,4 +13,8 @@ fun File.crc32(): Long {
         do {i = it.read(buf)} while (i >= 0)
         return it.checksum.value
     }
+}
+
+fun File.md5Hash():String{
+    return generateMD5(this)
 }

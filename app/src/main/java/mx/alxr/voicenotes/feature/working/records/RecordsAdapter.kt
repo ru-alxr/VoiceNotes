@@ -81,7 +81,7 @@ class RecordsAdapter(
             override fun areContentsTheSame(
                 oldRecord: RecordEntity,
                 newRecord: RecordEntity
-            ) = oldRecord.crc32 == newRecord.crc32
+            ) = oldRecord == newRecord
         }
     }
 
@@ -137,6 +137,7 @@ class RecordsAdapter(
 
         fun bind(entity: RecordEntity) {
             date.text = dateFormat.format(Date(entity.date))
+            logger.with(this@RecordsAdapter).add("entity is $entity").log()
             status.isEnabled = !entity.isSynchronized
             if (entity.isTranscribed) {
                 transcription.text = entity.transcription
