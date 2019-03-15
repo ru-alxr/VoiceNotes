@@ -6,22 +6,18 @@ class CustomMediaPlayer() : MediaPlayer() {
 
     var isPrepared: Boolean = false
     var isReleased: Boolean = false
-    var isStopped: Boolean = false
     var isPaused: Boolean = false
     var isReset: Boolean = false
 
     init {
-        setOnPreparedListener { isPrepared = true }
+        setOnPreparedListener {
+            isPrepared = true
+        }
     }
 
     override fun release() {
         super.release()
         isReleased = true
-    }
-
-    override fun stop() {
-        super.stop()
-        isStopped = true
     }
 
     override fun pause() {
@@ -32,7 +28,8 @@ class CustomMediaPlayer() : MediaPlayer() {
     override fun start() {
         super.start()
         isPaused = false
-        isStopped = false
+        isReleased = false
+        isReset = false
     }
 
     override fun reset() {
@@ -41,7 +38,7 @@ class CustomMediaPlayer() : MediaPlayer() {
     }
 
     fun state():String{
-        return "isPrepared=$isPrepared isReleased=$isReleased isStopped=$isStopped isPaused=$isPaused isReset=$isReset"
+        return "isPrepared=$isPrepared isReleased=$isReleased isPaused=$isPaused isReset=$isReset"
     }
 
 }
