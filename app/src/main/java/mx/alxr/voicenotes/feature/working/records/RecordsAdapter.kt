@@ -11,6 +11,7 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import mx.alxr.voicenotes.R
 import mx.alxr.voicenotes.repository.record.RecordEntity
+import mx.alxr.voicenotes.utils.extensions.getPosition
 import mx.alxr.voicenotes.utils.logger.ILogger
 import mx.alxr.voicenotes.utils.widgets.CheckableImageView
 import java.text.DateFormat
@@ -24,8 +25,19 @@ class RecordsAdapter(
 ) :
     PagedListAdapter<RecordEntity, RecordsAdapter.RecordViewHolder>(DIFF_CALLBACK) {
 
-    init {
-        setHasStableIds(true)
+    companion object {
+        private val DIFF_CALLBACK = object :
+            DiffUtil.ItemCallback<RecordEntity>() {
+            override fun areItemsTheSame(
+                oldRecord: RecordEntity,
+                newRecord: RecordEntity
+            ) = oldRecord.crc32 == newRecord.crc32
+
+            override fun areContentsTheSame(
+                oldRecord: RecordEntity,
+                newRecord: RecordEntity
+            ) = oldRecord == newRecord
+        }
     }
 
     private var mState: PlaybackState = PlaybackState()
@@ -38,30 +50,15 @@ class RecordsAdapter(
             Locale.getDefault()
         )
 
-    override fun getItemId(position: Int): Long {
-        return getItem(position)?.crc32 ?: -1
-    }
-
     fun setState(state: PlaybackState) {
-        state.apply {
-            mState = this
-            when (state.mpState) {
-                MediaPlayerState.Stopped -> return
-                else -> notifyItemChangedExt(getPosition(crc32), this)
-            }
-        }
-    }
-
-    private fun notifyItemChangedExt(position: Int, state: PlaybackState) {
+        mState = state
+        if (state.mpState == MediaPlayerState.Stopped) return
         mMap[state.crc32] = state.progress
-        if (position >= 0) notifyItemChanged(position)
-    }
-
-    private fun getPosition(crc32: Long): Int {
-        for (index in 0 until itemCount) {
-            if (getItem(index)?.crc32 == crc32) return index
-        }
-        return -1
+        getPosition { position -> getItem(position)?.crc32 == state.crc32}
+            .apply {
+                if (invalid()) return
+                notifyItemChanged(this)
+            }
     }
 
     private fun Int.invalid(): Boolean {
@@ -80,21 +77,6 @@ class RecordsAdapter(
         val entity: RecordEntity? = getItem(position)
         entity?.apply {
             holder.bind(this)
-        }
-    }
-
-    companion object {
-        private val DIFF_CALLBACK = object :
-            DiffUtil.ItemCallback<RecordEntity>() {
-            override fun areItemsTheSame(
-                oldRecord: RecordEntity,
-                newRecord: RecordEntity
-            ) = oldRecord.crc32 == newRecord.crc32
-
-            override fun areContentsTheSame(
-                oldRecord: RecordEntity,
-                newRecord: RecordEntity
-            ) = oldRecord == newRecord
         }
     }
 
@@ -179,7 +161,6 @@ class RecordsAdapter(
                     mMap[entity.crc32] = 0
                 }
                 seek.progress = mMap[entity.crc32] ?: 0
-                logger.with(this@RecordsAdapter).add("${entity.crc32} === ${seek.progress}").log()
                 setDuration(entity.duration)
             }
             transcription.visibility = if (entity.isTranscribed) View.VISIBLE else View.GONE
