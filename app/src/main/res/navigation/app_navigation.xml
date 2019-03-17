@@ -9,29 +9,60 @@
             android:id="@+id/init_fragment"
             android:name="mx.alxr.voicenotes.feature.init.InitFragment"
             android:label="FragmentInit"
-            tools:layout="@layout/fragment_init">
+            tools:layout="@layout/fragment_init"/>
 
-    </fragment>
+    <!-- ********************************************************************* -->
+    <!-- ********************************************************************* -->
+    <!-- Restore records from firebase cloud storage -->
+    <fragment
+        android:id="@+id/restoreFragment"
+        android:name="mx.alxr.voicenotes.feature.restore.RestoreFragment"
+        android:label="RestoreFragment"
+        tools:layout="@layout/fragment_restore_records"/>
+
+    <!-- After auth -->
+    <action
+        android:id="@+id/action_to_restore_records"
+        app:destination="@id/restoreFragment"
+        app:launchSingleTop="true"
+        app:popUpTo="@+id/nav_graph_id"
+        app:popUpToInclusive="true"/>
+
+    <!-- During regular usage-->
+    <action
+        android:id="@+id/action_to_sudden_records_restoration"
+        app:destination="@id/restoreFragment"
+        app:enterAnim="@anim/fragment_appear_from_right_to_left"
+        app:exitAnim="@anim/fragment_disappear_from_right_to_left"
+        app:popEnterAnim="@anim/fragment_popup_appear"
+        app:popExitAnim="@anim/fragment_popup_disappear"/>
+
+    <!-- ********************************************************************* -->
+    <!-- ********************************************************************* -->
+    <!-- Working fragment, i.e. used during regular usage -->
+    <fragment
+        android:id="@+id/working_fragment"
+        android:name="mx.alxr.voicenotes.feature.working.WorkingFragment"
+        android:label="WorkingFragment"
+        tools:layout="@layout/fragment_working"/>
 
     <action
-            android:id="@+id/action_to_preload"
-            app:destination="@id/preloadFragment"
-            app:launchSingleTop="true"
-            app:popUpTo="@+id/nav_graph_id"
-            app:popUpToInclusive="true"/>
-
-    <action
-            android:id="@+id/action_to_work"
-            app:destination="@id/working_fragment"
-            app:launchSingleTop="true"
-            app:popUpTo="@+id/nav_graph_id"
-            app:popUpToInclusive="true"/>
-
-    <action
-        android:id="@+id/action_back_to_work"
+        android:id="@+id/action_to_work"
         app:destination="@id/working_fragment"
-        app:popUpTo="@+id/nav_graph_id"/>
+        app:launchSingleTop="true"
+        app:popUpTo="@+id/nav_graph_id"
+        app:popUpToInclusive="true"/>
 
+    <!-- ********************************************************************* -->
+    <!-- ********************************************************************* -->
+    <!-- Selection language for User or particular record -->
+    <fragment
+        android:id="@+id/language_selector_fragment"
+        android:name="mx.alxr.voicenotes.feature.selector.NativeLanguageSelectorFragment"
+        android:label="NativeLanguageSelectorFragment"
+        tools:layout="@layout/fragment_native_language_selector"/>
+
+    <!-- ...for User -->
     <action
         android:id="@+id/action_to_language_selector"
         app:destination="@id/language_selector_fragment"
@@ -39,37 +70,7 @@
         app:popUpTo="@+id/nav_graph_id"
         app:popUpToInclusive="true"/>
 
-    <fragment
-            android:id="@+id/language_selector_fragment"
-            android:name="mx.alxr.voicenotes.feature.selector.NativeLanguageSelectorFragment"
-            android:label="NativeLanguageSelectorFragment"
-            tools:layout="@layout/fragment_native_language_selector">
-
-    </fragment>
-
-    <fragment
-            android:id="@+id/working_fragment"
-            android:name="mx.alxr.voicenotes.feature.working.WorkingFragment"
-            android:label="WorkingFragment"
-            tools:layout="@layout/fragment_working">
-
-    </fragment>
-
-    <fragment android:id="@+id/preloadFragment"
-              android:name="mx.alxr.voicenotes.feature.preload.PreloadFragment"
-              android:label="PreloadFragment"
-              tools:layout="@layout/fragment_preload">
-
-    </fragment>
-
-    <action
-        android:id="@+id/action_preload_and_select_language"
-        app:destination="@id/preloadFragment"
-        app:enterAnim="@anim/fragment_appear_from_right_to_left"
-        app:exitAnim="@anim/fragment_disappear_from_right_to_left"
-        app:popEnterAnim="@anim/fragment_popup_appear"
-        app:popExitAnim="@anim/fragment_popup_disappear"/>
-
+    <!-- ...particular record -->
     <action
         android:id="@+id/action_select_language"
         app:destination="@id/language_selector_fragment"
@@ -78,13 +79,14 @@
         app:popEnterAnim="@anim/fragment_popup_appear"
         app:popExitAnim="@anim/fragment_popup_disappear"/>
 
-    <action
-        android:id="@+id/action_auth_user"
-        app:destination="@id/authFragment"
-        app:enterAnim="@anim/fragment_appear_from_right_to_left"
-        app:exitAnim="@anim/fragment_disappear_from_right_to_left"
-        app:popEnterAnim="@anim/fragment_popup_appear"
-        app:popExitAnim="@anim/fragment_popup_disappear"/>
+    <!-- ********************************************************************* -->
+    <!-- ********************************************************************* -->
+    <!-- Auth user with Firebase Auth UI -->
+    <fragment
+        android:id="@+id/authFragment"
+        android:name="mx.alxr.voicenotes.feature.auth.AuthFragment"
+        android:label="AuthFragment"
+        tools:layout="@layout/fragment_auth"/>
 
     <action
         android:id="@+id/action_to_auth_user"
@@ -93,10 +95,29 @@
         app:popUpTo="@+id/nav_graph_id"
         app:popUpToInclusive="true"/>
 
-    <fragment
-        android:id="@+id/authFragment"
-        android:name="mx.alxr.voicenotes.feature.auth.AuthFragment"
-        android:label="AuthFragment"
-        tools:layout="@layout/fragment_auth"/>
+    <!-- ********************************************************************* -->
+    <!-- ********************************************************************* -->
+    <!-- Load list of languages before selection -->
+    <fragment android:id="@+id/preloadFragment"
+        android:name="mx.alxr.voicenotes.feature.preload.PreloadFragment"
+        android:label="PreloadFragment"
+        tools:layout="@layout/fragment_preload"/>
+
+    <!-- After auth -->
+    <action
+        android:id="@+id/action_to_preload"
+        app:destination="@id/preloadFragment"
+        app:launchSingleTop="true"
+        app:popUpTo="@+id/nav_graph_id"
+        app:popUpToInclusive="true"/>
+
+    <!-- During regular usage-->
+    <action
+        android:id="@+id/action_preload_and_select_language"
+        app:destination="@id/preloadFragment"
+        app:enterAnim="@anim/fragment_appear_from_right_to_left"
+        app:exitAnim="@anim/fragment_disappear_from_right_to_left"
+        app:popEnterAnim="@anim/fragment_popup_appear"
+        app:popExitAnim="@anim/fragment_popup_disappear"/>
 
 </navigation>

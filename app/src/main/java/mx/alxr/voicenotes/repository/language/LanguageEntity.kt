@@ -8,7 +8,7 @@ data class LanguageEntity(
     @PrimaryKey val code: String,
     val name: String,
     val nameEng: String,
-    val position: Int
+    val position: Int = 0
 ) {
 
     override fun toString(): String {

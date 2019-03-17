@@ -17,8 +17,6 @@ class Player(private val logger: ILogger) : IPlayer, MediaPlayer.OnErrorListener
     MediaPlayer.OnCompletionListener {
 
     private lateinit var mediaPlayer: CustomMediaPlayer
-    private var mDuration: Long = 0
-    private var progress: Int = 0
 
     private var mPlayback: IPlayback? = null
 
@@ -30,8 +28,8 @@ class Player(private val logger: ILogger) : IPlayer, MediaPlayer.OnErrorListener
     }
 
     override fun onError(mp: MediaPlayer?, what: Int, extra: Int): Boolean {
+        logger.with(this).add("onError $what").log()
         mediaPlayer.release()
-        progress = 0
         mPlayback?.onComplete()
         cleanSchedule()
         return false
@@ -42,15 +40,13 @@ class Player(private val logger: ILogger) : IPlayer, MediaPlayer.OnErrorListener
     }
 
     override fun onCompletion(mp: MediaPlayer?) {
+        logger.with(this).add("onCompletion").log()
         mediaPlayer.reset()
-        progress = 0
         mPlayback?.onComplete()
         cleanSchedule()
     }
 
-    override fun play(file: File, duration: Long) {
-        progress = 0
-        mDuration = duration
+    override fun play(file: File, duration: Long, position: Int) {
         cleanSchedule()
         if (!::mediaPlayer.isInitialized || mediaPlayer.isReleased) {
             mediaPlayer = CustomMediaPlayer()
@@ -63,6 +59,7 @@ class Player(private val logger: ILogger) : IPlayer, MediaPlayer.OnErrorListener
             mediaPlayer.reset()
             mediaPlayer.setDataSource(file.absolutePath)
             mediaPlayer.prepare()
+            mediaPlayer.seekTo(position)
             mediaPlayer.start()
             mExecutorService = schedule()
         } catch (e: IOException) {
@@ -74,52 +71,13 @@ class Player(private val logger: ILogger) : IPlayer, MediaPlayer.OnErrorListener
         }
     }
 
-    override fun jumpTo(position: Int) {
-        cleanSchedule()
-        val paused = mediaPlayer.isPaused
-        if (!paused) mediaPlayer.pause()
-        val millis = (mDuration.toFloat() * position.toFloat() / 100F).toInt()
-        mediaPlayer.seekTo(millis)
-        progress = millis
-        mPlayback?.onProgress(millis)
-        if (paused) return
-        mediaPlayer.start()
-        mExecutorService = schedule()
-    }
-
-    override fun resume(file: File): Int {
-        if (!::mediaPlayer.isInitialized || mediaPlayer.isReleased) {
-            mediaPlayer = CustomMediaPlayer()
-            mediaPlayer.setOnErrorListener(this)
-            mediaPlayer.setOnSeekCompleteListener(this)
-            mediaPlayer.setOnCompletionListener(this)
-            mediaPlayer.isLooping = false
-            mediaPlayer.reset()
-            mediaPlayer.setDataSource(file.absolutePath)
-            mediaPlayer.prepare()
-        }
-        mediaPlayer.seekTo(progress)
-        mPlayback?.onProgress(progress)
-        mediaPlayer.start()
-        mExecutorService = schedule()
-        return progress
-    }
-
-    override fun pause() {
+    override fun stop() {
         cleanSchedule()
         if (!::mediaPlayer.isInitialized) return
-        if (mediaPlayer.isPrepared) {
-            logger.with(this).add("STATE: ${mediaPlayer.state()}").log()
-            if (!mediaPlayer.isReleased && !mediaPlayer.isReset) {
-                mediaPlayer.pause()
-                progress = mediaPlayer.currentPosition
-            }
-        }
-        mPlayback?.onProgress(progress)
-    }
-
-    override fun deepPause() {
-        if (!::mediaPlayer.isInitialized) return
+        if (mediaPlayer.isReset) return
+        if (mediaPlayer.isReleased) return
+        if (!mediaPlayer.isPrepared) return
+        mediaPlayer.stop()
         mediaPlayer.release()
     }
 
@@ -142,7 +100,7 @@ class Player(private val logger: ILogger) : IPlayer, MediaPlayer.OnErrorListener
                 if (mediaPlayer.isReleased) return
                 emitter?.apply { onNext(mediaPlayer.currentPosition) }
             }
-        }, 0, 250, TimeUnit.MILLISECONDS)
+        }, 0, 50, TimeUnit.MILLISECONDS)
         mDisposable = getFlowable()
             .observeOn(AndroidSchedulers.mainThread())
             .doOnNext { mPlayback?.onProgress(it) }

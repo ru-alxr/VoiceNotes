@@ -21,6 +21,7 @@ class VoiceApplication : Application() {
             listOf(
                 APPLICATION_MODULE,
                 FEATURE_AUTH,
+                FEATURE_FETCH_RECORDS,
                 FEATURE_INIT_MODULE,
                 FEATURE_PRELOAD_MODULE,
                 FEATURE_LANGUAGE_SELECTOR,

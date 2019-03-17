@@ -6,14 +6,8 @@ interface IPlayer {
 
     fun setPlayback(playback:IPlayback?)
 
-    fun play(file:File, duration:Long)
+    fun play(file:File, duration:Long, position:Int)
 
-    fun pause()
-
-    fun resume(file:File):Int
-
-    fun jumpTo(position:Int)
-
-    fun deepPause()
+    fun stop()
 
 }

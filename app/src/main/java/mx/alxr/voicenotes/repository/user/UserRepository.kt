@@ -96,4 +96,13 @@ class UserRepository(db: AppDatabase, private val logger: ILogger) : IUserReposi
                 Single.just(updated)
             }
     }
+
+    override fun setRestoreRecordsPerformed(): Single<Unit> {
+        return getUserSingle()
+            .flatMap {
+                mUserDAO.insert(it.copy(isFetchingRecordsPerformed = true))
+                Single.just(Unit)
+            }
+    }
+
 }

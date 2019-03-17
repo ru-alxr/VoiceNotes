@@ -27,8 +27,12 @@ class MainViewModel(
             .subscribeWith(SingleDisposable<UserEntity>(
                 success = {
                     val model = mLiveUserState.value ?: UserState()
-                    if (it.firebaseUserId.isEmpty() && !it.isRegistrationRequested) {
+                    if (it.firebaseUserId.isEmpty()) {
                         mLiveUserState.value = model.copy(feature = FEATURE_AUTH, args = null)
+                        return@SingleDisposable
+                    }
+                    if (!it.isFetchingRecordsPerformed && !it.languageCode.isEmpty()){
+                        mLiveUserState.value = model.copy(feature = FEATURE_LOAD_RECORDS, args = null)
                         return@SingleDisposable
                     }
                     if (it.isLanguageRequested) {

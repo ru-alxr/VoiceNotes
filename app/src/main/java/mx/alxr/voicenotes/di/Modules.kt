@@ -11,8 +11,11 @@ import mx.alxr.voicenotes.feature.recognizer.Recognizer
 import mx.alxr.voicenotes.feature.recorder.FILE_EXTENSION
 import mx.alxr.voicenotes.feature.recorder.IRecorder
 import mx.alxr.voicenotes.feature.recorder.Recorder
+import mx.alxr.voicenotes.feature.restore.RestoreViewModel
 import mx.alxr.voicenotes.feature.selector.LanguageSelectorViewModel
+import mx.alxr.voicenotes.feature.synchronizer.IRecordsFetcher
 import mx.alxr.voicenotes.feature.synchronizer.ISynchronizer
+import mx.alxr.voicenotes.feature.synchronizer.RecordsFetcher
 import mx.alxr.voicenotes.feature.synchronizer.Synchronizer
 import mx.alxr.voicenotes.feature.working.WorkingViewModel
 import mx.alxr.voicenotes.feature.working.home.HomeViewModel
@@ -46,6 +49,18 @@ val FEATURE_AUTH = module {
         )
     }
 
+}
+
+val FEATURE_FETCH_RECORDS = module {
+    viewModel {
+        RestoreViewModel(
+            logger = get(),
+            navigation = get(),
+            userRepository = get(),
+            errorResolver = get(),
+            fetcher = get()
+        )
+    }
 }
 
 val FEATURE_PRELOAD_MODULE = module {
@@ -110,6 +125,22 @@ val MAIN_VIEW_MODULE = module {
 
     single { WalletRepository() as IWalletRepository }
 
-    single { Synchronizer(db = get(), firestore = get(), logger = get(), storage =get(), mediaStorage = get() ) as ISynchronizer }
+    single {
+        Synchronizer(
+            db = get(),
+            firestore = get(),
+            logger = get(),
+            storage = get(),
+            mediaStorage = get()
+        ) as ISynchronizer
+    }
+
+    single {
+        RecordsFetcher(
+            db = get(),
+            logger = get(),
+            firestore = get()
+        ) as IRecordsFetcher
+    }
 
 }

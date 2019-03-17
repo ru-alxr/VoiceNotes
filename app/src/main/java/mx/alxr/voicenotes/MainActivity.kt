@@ -7,7 +7,6 @@ import androidx.navigation.NavController
 import androidx.navigation.Navigation
 import mx.alxr.voicenotes.feature.*
 import mx.alxr.voicenotes.feature.synchronizer.ISynchronizer
-import mx.alxr.voicenotes.repository.record.RecordEntity
 import mx.alxr.voicenotes.repository.record.RecordTag
 import mx.alxr.voicenotes.utils.extensions.hideSoftKeyboard
 import mx.alxr.voicenotes.utils.logger.ILogger
@@ -57,10 +56,13 @@ class MainActivity : AppCompatActivity() {
                                 mNavController.navigate(R.id.action_to_language_selector, args)
                             }
                         }
-                        FEATURE_AUTH -> if (it.args is Boolean) {
-                            mNavController.navigate(R.id.action_auth_user, args)
-                        } else {
-                            mNavController.navigate(R.id.action_to_auth_user, args)
+                        FEATURE_AUTH -> mNavController.navigate(R.id.action_to_auth_user, args)
+                        FEATURE_LOAD_RECORDS -> {
+                            if (it.args is Boolean) {
+                                mNavController.navigate(R.id.action_to_sudden_records_restoration, args)
+                            } else {
+                                mNavController.navigate(R.id.action_to_restore_records, args)
+                            }
                         }
                         FEATURE_BACK -> mNavController.popBackStack()
                     }

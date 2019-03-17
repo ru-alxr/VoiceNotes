@@ -59,9 +59,7 @@ class Synchronizer(
     private fun performWith(queue: LinkedList<RecordEntity>) {
         if (queue.isEmpty()) return
         mPerformDisposable?.dispose()
-        val single: Single<RemoteRecord> = Single
-            .create { emitter -> syncRecord(queue, emitter) }
-
+        val single: Single<RemoteRecord> = Single.create { emitter -> syncRecord(queue, emitter) }
         mPerformDisposable = single
             .subscribeOn(Schedulers.io())
             .observeOn(Schedulers.io())
@@ -77,7 +75,7 @@ class Synchronizer(
                         isSynchronized = true,
                         languageCode = languageCode,
                         userId = uid,
-                        fileUploaded = true
+                        isFileUploaded = true
                     )
                     logger.with(this@Synchronizer).add("performWith: doOnSuccess $entity").log()
                     recordsDao.insert(entity)
@@ -106,7 +104,7 @@ class Synchronizer(
             return
         }
         logger.with(this@Synchronizer).add("syncRecord $entity").log()
-        if (entity.fileUploaded) {
+        if (entity.isFileUploaded) {
             onPostFileUploadSuccess(entity, emitter)
             return
         }
@@ -151,7 +149,7 @@ class Synchronizer(
             )
             return
         }
-        recordsDao.insert(entity.copy(fileUploaded = true))
+        recordsDao.insert(entity.copy(isFileUploaded = true))
         onPostFileUploadSuccess(entity, emitter)
     }
 

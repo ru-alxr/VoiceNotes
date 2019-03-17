@@ -20,28 +20,17 @@ import java.util.concurrent.TimeUnit
 class RecordsAdapter(
     @Suppress("unused") private val logger: ILogger,
     private val inflater: LayoutInflater,
-    private val callback: ICallback,
-    private val recyclerView: RecyclerView
+    private val callback: ICallback
 ) :
-    PagedListAdapter<RecordEntity, RecordsAdapter.RecordViewHolder>(DIFF_CALLBACK),
-    SeekBar.OnSeekBarChangeListener {
+    PagedListAdapter<RecordEntity, RecordsAdapter.RecordViewHolder>(DIFF_CALLBACK) {
 
-    private var mCheckedId: Long = -1
-    private var mProgress: Int = 0
-    private var mTracking: Boolean = false
-    private lateinit var mState: PlaybackState
-
-    fun setState(id: Long, progress: Int, state: PlaybackState, isTracking: Boolean) {
-        val oldProgress = mProgress
-        mCheckedId = id
-        mProgress = progress
-        mState = state
-        mTracking = isTracking
-        if (Math.abs(oldProgress - progress) < 500 && isTracking) return
-        recyclerView.post { notifyDataSetChanged() }
+    init {
+        setHasStableIds(true)
     }
 
-    //    private val dateFormat = SimpleDateFormat("MMM dd HH:mm:ss", Locale.getDefault())
+    private var mState: PlaybackState = PlaybackState()
+    private val mMap: MutableMap<Long, Int> = HashMap()
+
     private val dateFormat = DateFormat
         .getDateTimeInstance(
             DateFormat.SHORT,
@@ -49,8 +38,30 @@ class RecordsAdapter(
             Locale.getDefault()
         )
 
-    private fun isCurrentRecord(entity: RecordEntity): Boolean {
-        return entity.crc32 == mCheckedId
+    override fun getItemId(position: Int): Long {
+        return getItem(position)?.crc32 ?: -1
+    }
+
+    fun setState(state: PlaybackState) {
+        state.apply {
+            mState = this
+            when (state.mpState) {
+                MediaPlayerState.Stopped -> return
+                else -> notifyItemChangedExt(getPosition(crc32), this)
+            }
+        }
+    }
+
+    private fun notifyItemChangedExt(position: Int, state: PlaybackState) {
+        mMap[state.crc32] = state.progress
+        if (position >= 0) notifyItemChanged(position)
+    }
+
+    private fun getPosition(crc32: Long): Int {
+        for (index in 0 until itemCount) {
+            if (getItem(index)?.crc32 == crc32) return index
+        }
+        return -1
     }
 
     private fun Int.invalid(): Boolean {
@@ -63,7 +74,9 @@ class RecordsAdapter(
     }
 
     override fun onBindViewHolder(holder: RecordViewHolder, position: Int) {
-        if (position.invalid()) return
+        if (position.invalid()) {
+            return
+        }
         val entity: RecordEntity? = getItem(position)
         entity?.apply {
             holder.bind(this)
@@ -85,19 +98,6 @@ class RecordsAdapter(
         }
     }
 
-    override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
-        if (!fromUser) return
-        callback.onSeekBarChange(progress)
-    }
-
-    override fun onStartTrackingTouch(seekBar: SeekBar?) {
-        callback.onStartTrackingTouch()
-    }
-
-    override fun onStopTrackingTouch(seekBar: SeekBar?) {
-        callback.onStopTrackingTouch()
-    }
-
     inner class RecordViewHolder(
         view: View,
         private val date: TextView = view.findViewById(R.id.date_view),
@@ -110,7 +110,7 @@ class RecordsAdapter(
         private val share: View = view.findViewById(R.id.share_record_view),
         private val language: TextView = view.findViewById(R.id.language_view)
 
-    ) : RecyclerView.ViewHolder(view), View.OnClickListener {
+    ) : RecyclerView.ViewHolder(view), View.OnClickListener, SeekBar.OnSeekBarChangeListener {
 
         init {
             play.setOnClickListener(this)
@@ -118,7 +118,29 @@ class RecordsAdapter(
             recognize.setOnClickListener(this)
             share.setOnClickListener(this)
             language.setOnClickListener(this)
-            seek.setOnSeekBarChangeListener(this@RecordsAdapter)
+        }
+
+        override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
+            val entity = getItem(adapterPosition) ?: return
+            logger.with(this@RecordsAdapter).add("${entity.crc32} === $progress").log()
+            mMap[entity.crc32] = progress
+            if (progress == 0) {
+                setDuration(seek.max.toLong())
+            } else {
+                setDuration(progress)
+            }
+            if (!fromUser || mState.crc32 != entity.crc32) return
+            callback.onSeekBarChange(progress)
+        }
+
+        override fun onStartTrackingTouch(seekBar: SeekBar?) {
+            val entity = getItem(adapterPosition) ?: return
+            if (mState.crc32 == entity.crc32) callback.onStartTrackingTouch()
+        }
+
+        override fun onStopTrackingTouch(seekBar: SeekBar?) {
+            val entity = getItem(adapterPosition) ?: return
+            if (mState.crc32 == entity.crc32) callback.onStopTrackingTouch()
         }
 
         override fun onClick(v: View?) {
@@ -126,7 +148,9 @@ class RecordsAdapter(
             if (position.invalid()) return
             getItem(position)?.apply {
                 when (v) {
-                    play -> callback.onPlayButtonClick(this)
+                    play -> {
+                        callback.onPlayButtonClick(this, seek.progress)
+                    }
                     share -> callback.requestShare(this)
                     recognize -> callback.requestGetTranscription(this)
                     status -> callback.requestSynchronize(this)
@@ -136,29 +160,34 @@ class RecordsAdapter(
         }
 
         fun bind(entity: RecordEntity) {
+            seek.setOnSeekBarChangeListener(null)
             date.text = dateFormat.format(Date(entity.date))
-            logger.with(this@RecordsAdapter).add("entity is $entity").log()
             status.isEnabled = !entity.isSynchronized
             if (entity.isTranscribed) {
                 transcription.text = entity.transcription
             } else {
-                transcription.setText(R.string.transcription_is_not_ready)
+                transcription.text = null
             }
-            val isCurrentRecord = isCurrentRecord(entity)
-            play.isChecked = isCurrentRecord && mState == PlaybackState.Playing
-            if (isCurrentRecord) {
-                setDuration(mProgress)
-                seek.isEnabled = true
-                if (!mTracking) seek.progress = (100 * mProgress / entity.duration).toInt()
+            val checked = mState.crc32 == entity.crc32 && mState.isPlaying() && mState.progress < mState.duration
+            play.isChecked = checked
+            seek.max = entity.duration.toInt()
+            if (checked) {
+                seek.progress = mState.progress
+                setDuration(mState.progress)
             } else {
+                if (mMap[entity.crc32] == entity.duration.toInt()) {
+                    mMap[entity.crc32] = 0
+                }
+                seek.progress = mMap[entity.crc32] ?: 0
+                logger.with(this@RecordsAdapter).add("${entity.crc32} === ${seek.progress}").log()
                 setDuration(entity.duration)
-                seek.isEnabled = false
-                seek.progress = 0
             }
             transcription.visibility = if (entity.isTranscribed) View.VISIBLE else View.GONE
             recognize.visibility = if (entity.isTranscribed) View.INVISIBLE else View.VISIBLE
-
             language.text = entity.languageCode.replace("-", " | ")
+            if (mState.mpState == MediaPlayerState.Stopping) callback.onStopped()
+            if (mState.mpState == MediaPlayerState.Pausing) callback.onPaused()
+            seek.setOnSeekBarChangeListener(this@RecordViewHolder)
         }
 
         private fun setDuration(d: Number) {

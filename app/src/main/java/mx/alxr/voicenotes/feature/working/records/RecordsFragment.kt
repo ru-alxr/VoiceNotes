@@ -38,7 +38,7 @@ class RecordsFragment : Fragment(), Observer<PagedList<RecordEntity>> {
         val manager = LinearLayoutManager(activity)
         manager.reverseLayout = true
         records_recycler_view.layoutManager = manager
-        mAdapter = RecordsAdapter(logger, mLayoutInflater, mViewModel as ICallback, records_recycler_view)
+        mAdapter = RecordsAdapter(logger, mLayoutInflater, mViewModel as ICallback)
         records_recycler_view.adapter = mAdapter
         LinearLayoutManager(activity).reverseLayout = true
         mViewModel.getModel().observe(this, Observer { it?.apply { onModelChange(this) } })
@@ -47,7 +47,7 @@ class RecordsFragment : Fragment(), Observer<PagedList<RecordEntity>> {
 
     private fun onModelChange(model: Model) {
         if (!::mAdapter.isInitialized) return
-        mAdapter.setState(model.playingRecordCRC32, model.progress, model.state, model.isTracking)
+        mAdapter.setState(model.state)
         handleError(model.solution)
         shareRecord(model.share)
         handleRecognition(model.args)

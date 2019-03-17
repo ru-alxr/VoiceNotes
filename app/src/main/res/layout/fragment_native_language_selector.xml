@@ -26,6 +26,8 @@
         android:paddingEnd="8dp"
         android:textColor="@color/main_text_color"
         android:textSize="16sp"
+        android:singleLine="true"
+        android:imeOptions="actionSearch"
         tools:ignore="TextFields,UnusedAttribute" />
 
     <androidx.recyclerview.widget.RecyclerView

@@ -246,3 +246,29 @@ fun Activity.shackBar(message:String){
         .make(findViewById(android.R.id.content), message, Snackbar.LENGTH_LONG)
         .show()
 }
+
+fun Activity.information(message:String, ok: ()->Unit){
+    AlertDialog
+        .Builder(this)
+        .setView(R.layout.dialog_information)
+        .setCancelable(false)
+        .show()
+        .apply {
+            findViewById<TextView>(R.id.info)?.apply {
+                text = message
+            }
+            findViewById<TextView>(R.id.negative)?.apply {
+                setText(R.string.cancel)
+                setOnClickListener {
+                    dismiss()
+                }
+            }
+            findViewById<TextView>(R.id.neutral)?.apply {
+                setOnClickListener {
+                    dismiss()
+                    ok.invoke()
+                }
+            }
+            window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+        }
+}

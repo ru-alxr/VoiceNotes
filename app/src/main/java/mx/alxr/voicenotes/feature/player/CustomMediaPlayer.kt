@@ -12,12 +12,16 @@ class CustomMediaPlayer() : MediaPlayer() {
     init {
         setOnPreparedListener {
             isPrepared = true
+            isPaused = false
+            isReleased = false
+            isReset = false
         }
     }
 
     override fun release() {
         super.release()
         isReleased = true
+        isPaused = false
     }
 
     override fun pause() {
@@ -35,6 +39,7 @@ class CustomMediaPlayer() : MediaPlayer() {
     override fun reset() {
         super.reset()
         isReset = true
+        isPaused = false
     }
 
     fun state():String{

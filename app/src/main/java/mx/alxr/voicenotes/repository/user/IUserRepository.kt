@@ -16,5 +16,6 @@ interface IUserRepository {
     fun setUserNativeLanguage(language: LanguageEntity): Single<Unit>
 
     fun setNativeLanguageExplicitlyAsked(): Single<Unit>
+    fun setRestoreRecordsPerformed(): Single<Unit>
 
 }

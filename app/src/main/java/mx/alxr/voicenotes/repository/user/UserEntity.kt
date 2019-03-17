@@ -11,11 +11,13 @@ data class UserEntity(
     val languageNameEnglish: String = "",
 
     val isLanguageRequested:Boolean = false,
-    val isRegistrationRequested:Boolean = false,
 
     val firebaseUserId: String = "",
     val firebaseUserProvider:String = "",
 
     val displayName:String = "",
-    val email:String = ""
+    val email:String = "",
+
+    val isFetchingRecordsPerformed:Boolean = false
+
 )

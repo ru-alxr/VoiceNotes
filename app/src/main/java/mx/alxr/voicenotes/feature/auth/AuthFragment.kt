@@ -3,7 +3,9 @@ package mx.alxr.voicenotes.feature.auth
 import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
-import android.view.*
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
@@ -14,7 +16,6 @@ import kotlinx.android.synthetic.main.fragment_auth.*
 import mx.alxr.voicenotes.R
 import mx.alxr.voicenotes.utils.errors.ErrorSolution
 import mx.alxr.voicenotes.utils.errors.Interaction
-import mx.alxr.voicenotes.utils.extensions.hideSoftKeyboard
 import mx.alxr.voicenotes.utils.extensions.setupToolbar
 import mx.alxr.voicenotes.utils.extensions.shackBar
 import mx.alxr.voicenotes.utils.logger.ILogger
@@ -25,6 +26,7 @@ const val RC_SIGN_IN = 100
 
 class AuthFragment : Fragment(), View.OnClickListener, Observer<Model> {
 
+    @Suppress("unused")
     private val mLogger: ILogger by inject()
     private val mViewModel: AuthViewModel by viewModel()
 
@@ -38,25 +40,8 @@ class AuthFragment : Fragment(), View.OnClickListener, Observer<Model> {
         (activity as? AppCompatActivity)?.apply {
             setupToolbar(toolbar_view, showTitle = true, homeAsUp = false)
         }
-        setHasOptionsMenu(true)
         auth_view.setOnClickListener(this)
         mViewModel.getModel().observe(this, this)
-    }
-
-    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
-        super.onCreateOptionsMenu(menu, inflater)
-        menu.clear()
-        inflater.inflate(R.menu.menu_skip, menu)
-    }
-
-    override fun onOptionsItemSelected(item: MenuItem?): Boolean {
-        when (item?.itemId) {
-            R.id.skip -> {
-                activity?.hideSoftKeyboard()
-                activity?.shackBar(getString(R.string.sorry_cannot_skip))
-            }
-        }
-        return super.onOptionsItemSelected(item)
     }
 
     override fun onClick(v: View?) {

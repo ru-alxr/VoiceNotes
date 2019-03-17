@@ -2,6 +2,8 @@ package mx.alxr.voicenotes.feature.selector
 
 import android.os.Bundle
 import android.view.*
+import android.view.inputmethod.EditorInfo
+import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
@@ -36,7 +38,7 @@ class NativeLanguageSelectorFragment : Fragment(), Observer<PagedList<LanguageEn
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        if (arguments?.get(PAYLOAD_1) is Boolean){
+        if (arguments?.get(PAYLOAD_1) is Boolean) {
             mViewModel.setSelectionFlag(arguments?.get(PAYLOAD_2))
         }
         recycler_view.layoutManager = LinearLayoutManager(activity)
@@ -51,7 +53,14 @@ class NativeLanguageSelectorFragment : Fragment(), Observer<PagedList<LanguageEn
             .map { it.toString() }
             .doOnNext { onQueryChange(it) }
             .subscribe()
-
+        language_filter_view.setOnEditorActionListener(object : TextView.OnEditorActionListener {
+            override fun onEditorAction(v: TextView?, actionId: Int, event: KeyEvent?): Boolean {
+                if (actionId == EditorInfo.IME_ACTION_SEARCH){
+                    activity?.hideSoftKeyboard()
+                }
+                return true
+            }
+        })
         recycler_view.addOnScrollListener(object : RecyclerView.OnScrollListener() {
             override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
                 if (newState == SCROLL_STATE_DRAGGING) activity?.hideSoftKeyboard()
@@ -94,7 +103,6 @@ class NativeLanguageSelectorFragment : Fragment(), Observer<PagedList<LanguageEn
         }
         return super.onOptionsItemSelected(item)
     }
-
 
     override fun onChanged(t: PagedList<LanguageEntity>?) {
         mAdapter.submitList(t)

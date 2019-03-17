@@ -45,16 +45,6 @@ class RecordsViewModel(
         player.setPlayback(this)
     }
 
-    override fun onStartTrackingTouch() {
-        val model = mLiveModel.value ?: return
-        mLiveModel.value = model.copy(isTracking = true)
-    }
-
-    override fun onStopTrackingTouch() {
-        val model = mLiveModel.value ?: return
-        mLiveModel.value = model.copy(isTracking = false)
-    }
-
     fun getModel(): LiveData<Model> {
         return mLiveModel
     }
@@ -63,13 +53,43 @@ class RecordsViewModel(
         return LivePagedListBuilder<Int, RecordEntity>(dao.getAllPaged(), 10).build()
     }
 
+    override fun onStartTrackingTouch() {
+        val model = mLiveModel.value ?: return
+        val mpState = model.state.mpState
+        if (mpState == MediaPlayerState.Stopped) {
+            mLiveModel.value = model.copy(state = model.state.copy(isTracking = true))
+        } else {
+            mLiveModel.value =
+                model.copy(state = model.state.copy(isTracking = true, mpState = MediaPlayerState.Pausing))
+            player.stop()
+        }
+    }
+
+    override fun onStopTrackingTouch() {
+        val model = mLiveModel.value ?: return
+        mLiveModel.value = model.copy(state = model.state.copy(isTracking = false))
+    }
+
     override fun onProgress(progress: Int) {
         val model = mLiveModel.value ?: return
-        mLiveModel.value = model.copy(progress = progress)
+        mLiveModel.value = model.copy(state = model.state.copy(progress = progress))
+    }
+
+    override fun onPaused() {
+        val model = mLiveModel.value ?: return
+        mLiveModel.value = model.copy(state = model.state.copy(mpState = MediaPlayerState.Stopped))
+    }
+
+    override fun onStopped() {
+        val model = mLiveModel.value ?: return
+        mLiveModel.value = model.copy(state = PlaybackState())
     }
 
     override fun onComplete() {
-        mLiveModel.value = Model()
+        val model = mLiveModel.value ?: return
+        val duration = model.state.duration
+        mLiveModel.value =
+            model.copy(state = model.state.copy(mpState = MediaPlayerState.Stopping, progress = duration))
     }
 
     override fun onCleared() {
@@ -78,50 +98,58 @@ class RecordsViewModel(
         super.onCleared()
     }
 
-    override fun onPlayButtonClick(entity: RecordEntity) {
+    override fun onPlayButtonClick(entity: RecordEntity, progress: Int) {
         val model = mLiveModel.value ?: return
-        val isSameFile = model.playingRecordCRC32 == entity.crc32
-        if (isSameFile && model.state == PlaybackState.Playing) {
-            player.pause()
-            mLiveModel.value = model.copy(state = PlaybackState.Paused)
-            return
+        model.state.apply {
+            if (isPlaying()) {
+                player.stop()
+                if (isSameFile(entity)){
+                    mLiveModel.value = model.copy(state = copy(mpState = MediaPlayerState.Pausing))
+                    return
+                }else{
+                    mLiveModel.value = model.copy(state = copy(mpState = MediaPlayerState.Pausing))
+                }
+            }
+            mDisposable?.dispose()
+            mDisposable = storage
+                .getFile(entity.fileName, entity.crc32)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribeWith(
+                    SingleDisposable<File>(
+                        success = { onFileReady(entity, it, progress) },
+                        error = this@RecordsViewModel::onFileError
+                    )
+                )
         }
-        val paused = isSameFile && model.state == PlaybackState.Paused
-        if (!paused) mLiveModel.value = model.copy(state = PlaybackState.Stopped)
-        mDisposable?.dispose()
-        mDisposable = storage
-            .getFile(entity.fileName, entity.crc32)
-            .subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
-            .subscribeWith(
-                SingleDisposable<File>(
-                    success = { onFileReady(entity, it, paused) },
-                    error = this::onFileError
+    }
+
+    override fun onSeekBarChange(position: Int) {
+        val model = mLiveModel.value ?: return
+        model.state.apply {
+            mLiveModel.value = model.copy(state = copy(progress = position))
+            return@apply
+        }
+    }
+
+    private fun onFileReady(entity: RecordEntity, file: File, progress: Int) {
+        val model = mLiveModel.value ?: return
+        player.play(file, entity.duration, progress)
+        mLiveModel.value =
+            model.copy(
+                state = PlaybackState(
+                    duration = entity.duration.toInt(),
+                    progress = progress,
+                    crc32 = entity.crc32,
+                    mpState = MediaPlayerState.Playing
                 )
             )
     }
 
-    override fun onSeekBarChange(position: Int) {
-        player.jumpTo(position)
-    }
-
-    private fun onFileReady(entity: RecordEntity, file: File, resume: Boolean) {
-        val model = mLiveModel.value ?: return
-        if (resume) {
-            mLiveModel.value = model.copy(state = PlaybackState.Playing, progress = player.resume(file))
-        } else {
-            player.play(file, entity.duration)
-            mLiveModel.value =
-                model.copy(playingRecordCRC32 = entity.crc32, state = PlaybackState.Playing, progress = 0)
-        }
-    }
-
     private fun onFileError(t: Throwable) {
-        logger.with(this).add("onFileError ${resolver.resolve(t).message}").log()
         val model = mLiveModel.value ?: return
         mLiveModel.value = model.copy(
-            playingRecordCRC32 = -1,
-            state = PlaybackState.Stopped,
+            state = PlaybackState(),
             solution = resolver.resolve(t, Interaction.Snack)
         )
     }
@@ -133,11 +161,10 @@ class RecordsViewModel(
 
     fun pauseIfPlaying() {
         val model = mLiveModel.value ?: return
-        if (model.state == PlaybackState.Playing) {
-            mLiveModel.value = model.copy(state = PlaybackState.Paused)
+        if (model.state.isPlaying()) {
+            mLiveModel.value = model.copy(state = model.state.copy(mpState = MediaPlayerState.Pausing))
         }
-        player.pause()
-        player.deepPause()
+        player.stop()
     }
 
     override fun requestShare(entity: RecordEntity) {
@@ -172,12 +199,12 @@ class RecordsViewModel(
             )
     }
 
-    fun onRecognitionArgsHandled(){
+    fun onRecognitionArgsHandled() {
         val model = mLiveModel.value ?: return
         mLiveModel.value = model.copy(args = TranscriptionArgs())
     }
 
-    fun onRecognitionAccepted(args:TranscriptionArgs){
+    fun onRecognitionAccepted(args: TranscriptionArgs) {
         logger.with(this).add("onRecognitionAccepted").log()
     }
 
@@ -215,13 +242,10 @@ class RecordsViewModel(
 }
 
 data class Model(
-    val playingRecordCRC32: Long = -1,
-    val state: PlaybackState = PlaybackState.Stopped,
-    val progress: Int = 0,
-    val isTracking: Boolean = false,
+    val state: PlaybackState = PlaybackState(),
     val share: Share = Share(),
     val solution: ErrorSolution = ErrorSolution(),
-    val args:TranscriptionArgs = TranscriptionArgs()
+    val args: TranscriptionArgs = TranscriptionArgs()
 )
 
 data class Share(

@@ -9,8 +9,8 @@ import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.Disposable
 import io.reactivex.schedulers.Schedulers
 import mx.alxr.voicenotes.R
+import mx.alxr.voicenotes.feature.FEATURE_LOAD_RECORDS
 import mx.alxr.voicenotes.feature.FEATURE_PRELOAD
-import mx.alxr.voicenotes.feature.FEATURE_WORKING
 import mx.alxr.voicenotes.feature.IFeatureNavigation
 import mx.alxr.voicenotes.repository.remote.firebaseuser.IRemoteUserRepository
 import mx.alxr.voicenotes.repository.user.IUserRepository
@@ -50,8 +50,11 @@ class AuthViewModel(
             .observeOn(AndroidSchedulers.mainThread())
             .subscribeWith(SingleDisposable<UserEntity>(
                 success = {
-                    if (it.languageCode.isEmpty()) navigation.navigateFeature(FEATURE_PRELOAD)
-                    else navigation.navigateFeature(FEATURE_WORKING)
+                    if (isNewUser) {
+                        navigation.navigateFeature(FEATURE_PRELOAD)
+                    }else{
+                        navigation.navigateFeature(FEATURE_LOAD_RECORDS)
+                    }
                 },
                 error = {
                     val model = mLiveModel.value!!
