@@ -18,7 +18,7 @@ class ErrorMessageResolver(val resources: IStringResources) : IErrorMessageResol
     override fun resolve(
         throwable: Throwable,
         defaultInteraction: Interaction,
-        details: Map<String, String>
+        details: Any
     ): ErrorSolution {
         return ErrorSolution(
             message = resolveMessage(throwable),
@@ -35,6 +35,10 @@ class ErrorMessageResolver(val resources: IStringResources) : IErrorMessageResol
             is ProjectException -> resources.getString(throwable.messageId)
 
             is FirebaseFirestoreException -> resources.getString(R.string.no_network_error)
+            is com.google.firebase.storage.StorageException -> {
+                return if (throwable.isRecoverableException) resources.getString(R.string.no_network_error)
+                else resources.getString(R.string.remote_storage_error)
+            }
             else -> resources.getString(R.string.something_went_wrong)
         }
     }

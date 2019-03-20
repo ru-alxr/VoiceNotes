@@ -1,5 +1,6 @@
 package mx.alxr.voicenotes.repository.record
 
+import io.reactivex.Flowable
 import io.reactivex.Single
 import io.reactivex.schedulers.Schedulers
 import mx.alxr.voicenotes.R
@@ -14,6 +15,14 @@ class RecordsRepository(db: AppDatabase,
                         private val repo:IUserRepository) : IRecordsRepository {
 
     private val dao: RecordDAO = db.recordDataDAO()
+
+    override fun getAll(isSynchronized: Boolean): Flowable<List<RecordEntity>> {
+        return dao.getAll(isSynchronized)
+    }
+
+    override fun insert(record: RecordEntity) {
+        dao.insert(record)
+    }
 
     override fun insert(record: IRecord): Single<Unit> {
         return repo

@@ -1,5 +1,8 @@
 package mx.alxr.voicenotes.feature.working.records
 
+import android.Manifest
+import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -8,10 +11,16 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.paging.PagedList
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.karumi.dexter.Dexter
+import com.karumi.dexter.PermissionToken
+import com.karumi.dexter.listener.PermissionDeniedResponse
+import com.karumi.dexter.listener.PermissionGrantedResponse
+import com.karumi.dexter.listener.PermissionRequest
+import com.karumi.dexter.listener.single.PermissionListener
 import kotlinx.android.synthetic.main.fragment_records.*
 import mx.alxr.voicenotes.R
 import mx.alxr.voicenotes.feature.recognizer.TranscriptionArgs
-import mx.alxr.voicenotes.repository.media.IMediaStorage
+import mx.alxr.voicenotes.feature.synchronizer.ISynchronizer
 import mx.alxr.voicenotes.repository.record.RecordEntity
 import mx.alxr.voicenotes.utils.errors.*
 import mx.alxr.voicenotes.utils.extensions.*
@@ -19,10 +28,10 @@ import mx.alxr.voicenotes.utils.logger.ILogger
 import org.koin.android.ext.android.inject
 import org.koin.android.viewmodel.ext.android.viewModel
 
-class RecordsFragment : Fragment(), Observer<PagedList<RecordEntity>> {
+class RecordsFragment : Fragment(), Observer<PagedList<RecordEntity>>, PermissionListener {
 
     private val mViewModel: RecordsViewModel by viewModel()
-    private val mediaStorage: IMediaStorage by inject()
+    private val synchronizer: ISynchronizer by inject()
 
     private val logger: ILogger by inject()
 
@@ -51,6 +60,14 @@ class RecordsFragment : Fragment(), Observer<PagedList<RecordEntity>> {
         handleError(model.solution)
         shareRecord(model.share)
         handleRecognition(model.args)
+        handlePermissionRequest(model)
+    }
+
+    private fun handlePermissionRequest(model: Model) {
+        if (!model.requestPermissionSdCard) return
+        mViewModel.onPermissionRequestHandled()
+        val entity:RecordEntity = model.recordToPlay ?:return
+        if (checkExternalStoragePermission()) mViewModel.onSdCardAccessGranted(entity)
     }
 
     private fun handleRecognition(args: TranscriptionArgs) {
@@ -106,11 +123,58 @@ class RecordsFragment : Fragment(), Observer<PagedList<RecordEntity>> {
     }
 
     private fun shareFile(path: String) {
-        activity?.shareFile(path, mediaStorage)
+        activity?.shareFile(path, synchronizer)
     }
 
     private fun shareTranscription(isTranscriptionReady: Boolean, transcription: String) {
         activity?.shareTranscription(isTranscriptionReady, transcription)
+    }
+
+    private fun checkExternalStoragePermission(): Boolean {
+        activity?.apply {
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M ||
+                PackageManager.PERMISSION_GRANTED == checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE)
+            ) {
+                return true
+            } else {
+                Dexter
+                    .withActivity(this)
+                    .withPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                    .withListener(this@RecordsFragment)
+                    .check()
+            }
+        }
+        return false
+    }
+
+    override fun onPermissionGranted(response: PermissionGrantedResponse?) {
+    }
+
+    override fun onPermissionRationaleShouldBeShown(permission: PermissionRequest?, token: PermissionToken?) {
+        val message: String = when (permission?.name) {
+            Manifest.permission.WRITE_EXTERNAL_STORAGE -> getString(R.string.store_file_permission_rationale)
+            else -> {
+                token?.cancelPermissionRequest()
+                return
+            }
+        }
+        showDualSelectorDialog(
+            message = message,
+            negativeLabel = R.string.record_audio_permission_rationale_negative,
+            positiveLabel = R.string.record_audio_permission_rationale_positive,
+            positive = { token?.continuePermissionRequest() },
+            negative = { token?.cancelPermissionRequest() }
+        )
+    }
+
+    override fun onPermissionDenied(response: PermissionDeniedResponse?) {
+        if (response == null || !response.isPermanentlyDenied) return
+        showDualSelectorDialog(
+            message = getString(R.string.record_audio_permission_permanently_denied_message),
+            negativeLabel = R.string.record_audio_permission_permanently_denied_negative,
+            positiveLabel = R.string.record_audio_permission_permanently_denied_positive,
+            positive = { activity?.goAppSettings() }
+        )
     }
 
 }

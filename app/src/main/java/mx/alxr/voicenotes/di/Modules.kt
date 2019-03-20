@@ -21,8 +21,6 @@ import mx.alxr.voicenotes.feature.working.WorkingViewModel
 import mx.alxr.voicenotes.feature.working.home.HomeViewModel
 import mx.alxr.voicenotes.feature.working.records.RecordsViewModel
 import mx.alxr.voicenotes.feature.working.settings.SettingsViewModel
-import mx.alxr.voicenotes.repository.media.IMediaStorage
-import mx.alxr.voicenotes.repository.media.MediaStorage
 import mx.alxr.voicenotes.repository.record.IRecordsRepository
 import mx.alxr.voicenotes.repository.record.RecordsRepository
 import mx.alxr.voicenotes.repository.wallet.IWalletRepository
@@ -95,7 +93,7 @@ val MAIN_VIEW_MODULE = module {
 
     viewModel { MainViewModel(featureNavigation = get(), userRepository = get()) }
 
-    viewModel { HomeViewModel(userRepository = get(), logger = get(), recorder = get(), storage = get()) }
+    viewModel { HomeViewModel(userRepository = get(), logger = get(), recorder = get(), synchronizer = get()) }
 
     viewModel { SettingsViewModel(userRepository = get(), nav = get()) }
 
@@ -105,7 +103,7 @@ val MAIN_VIEW_MODULE = module {
         RecordsViewModel(
             db = get(),
             player = get(),
-            storage = get(),
+            synchronizer = get(),
             resolver = get(),
             logger = get(),
             recognizer = get(),
@@ -115,23 +113,21 @@ val MAIN_VIEW_MODULE = module {
 
     single { Recorder(androidContext()) as IRecorder }
 
-    single { MediaStorage(recordsRepository = get(), extension = FILE_EXTENSION) as IMediaStorage }
-
     single { RecordsRepository(db = get(), logger = get(), repo = get()) as IRecordsRepository }
 
     single { Player(get()) as IPlayer }
 
-    single { Recognizer(mediaStorage = get(), userRepository = get(), walletRepository = get()) as IRecognizer }
+    single { Recognizer(synchronizer = get(), userRepository = get(), walletRepository = get()) as IRecognizer }
 
     single { WalletRepository() as IWalletRepository }
 
     single {
         Synchronizer(
-            db = get(),
             firestore = get(),
             logger = get(),
             storage = get(),
-            mediaStorage = get()
+            extension = FILE_EXTENSION,
+            recordsRepository = get()
         ) as ISynchronizer
     }
 

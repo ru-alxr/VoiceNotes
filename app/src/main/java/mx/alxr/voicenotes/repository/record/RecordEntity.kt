@@ -21,13 +21,6 @@ data class RecordEntity(
     val isFileDownloaded:Boolean = false
 ) {
 
-    fun getTag(): HashMap<String, String> {
-        return HashMap<String, String>().apply {
-            put("fileName", fileName)
-            put("crc32", crc32.toString())
-        }
-    }
-
     fun getMap():Map<String, Any>{
         return HashMap<String, Any>().apply {
             put("file_name", fileName)
@@ -40,6 +33,14 @@ data class RecordEntity(
             put("user_id", userId)
         }
     }
+}
+
+fun Map<String, Any>.extractCrc32():Long{
+    return get("crc_32") as? Long?: -2
+}
+
+fun Map<String, Any>.extractFileName():String{
+    return get("file_name") as? String?: ""
 }
 
 data class RecordTag(val crc32: Long)

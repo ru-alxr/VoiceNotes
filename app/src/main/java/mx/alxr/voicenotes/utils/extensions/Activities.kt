@@ -22,7 +22,7 @@ import androidx.core.content.FileProvider
 import com.google.android.material.snackbar.Snackbar
 import mx.alxr.voicenotes.R
 import mx.alxr.voicenotes.feature.recognizer.TranscriptionArgs
-import mx.alxr.voicenotes.repository.media.IMediaStorage
+import mx.alxr.voicenotes.feature.synchronizer.ISynchronizer
 import mx.alxr.voicenotes.utils.errors.ProjectException
 import java.io.File
 import java.io.FileOutputStream
@@ -146,11 +146,11 @@ fun Activity.offer(args: TranscriptionArgs, positive: (TranscriptionArgs) -> Uni
         }
 }
 
-fun Activity.shareFile(path: String, mediaStorage: IMediaStorage){
+fun Activity.shareFile(path: String, synchronizer: ISynchronizer){
     try {
         val directory: File
         try {
-            directory = mediaStorage.getDirectory()
+            directory = synchronizer.getDirectory()
         } catch (e: ProjectException) {
             Snackbar.make(findViewById(android.R.id.content), e.messageId, Snackbar.LENGTH_LONG).show()
             return

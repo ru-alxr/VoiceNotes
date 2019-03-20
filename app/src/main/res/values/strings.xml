@@ -93,4 +93,7 @@
     <string name="error_fetching_data">Fetching records from cloud storage error</string>
     <string name="restore_records_result_message">%d records fetching from cloud storage</string>
 
+    <string name="error_file_download">Error file download</string>
+    <string name="remote_storage_error">File was removed</string>
+
 </resources>

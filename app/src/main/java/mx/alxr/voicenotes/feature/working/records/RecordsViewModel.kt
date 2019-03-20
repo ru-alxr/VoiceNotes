@@ -15,7 +15,7 @@ import mx.alxr.voicenotes.feature.player.IPlayback
 import mx.alxr.voicenotes.feature.player.IPlayer
 import mx.alxr.voicenotes.feature.recognizer.IRecognizer
 import mx.alxr.voicenotes.feature.recognizer.TranscriptionArgs
-import mx.alxr.voicenotes.repository.media.IMediaStorage
+import mx.alxr.voicenotes.feature.synchronizer.ISynchronizer
 import mx.alxr.voicenotes.repository.record.RecordEntity
 import mx.alxr.voicenotes.repository.record.RecordTag
 import mx.alxr.voicenotes.utils.errors.ErrorSolution
@@ -28,7 +28,7 @@ import java.io.File
 class RecordsViewModel(
     db: AppDatabase,
     private val player: IPlayer,
-    private val storage: IMediaStorage,
+    private val synchronizer: ISynchronizer,
     private val resolver: IErrorMessageResolver,
     private val logger: ILogger,
     private val recognizer: IRecognizer,
@@ -100,19 +100,24 @@ class RecordsViewModel(
 
     override fun onPlayButtonClick(entity: RecordEntity, progress: Int) {
         val model = mLiveModel.value ?: return
+        mLiveModel.value = model.copy(requestPermissionSdCard = true, recordToPlay = entity)
+    }
+
+    fun onSdCardAccessGranted(entity: RecordEntity) {
+        val model = mLiveModel.value ?: return
         model.state.apply {
             if (isPlaying()) {
                 player.stop()
-                if (isSameFile(entity)){
+                if (isSameFile(entity)) {
                     mLiveModel.value = model.copy(state = copy(mpState = MediaPlayerState.Pausing))
                     return
-                }else{
+                } else {
                     mLiveModel.value = model.copy(state = copy(mpState = MediaPlayerState.Pausing))
                 }
             }
             mDisposable?.dispose()
-            mDisposable = storage
-                .getFile(entity.fileName, entity.crc32)
+            mDisposable = synchronizer
+                .getFile(entity)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribeWith(
@@ -211,7 +216,7 @@ class RecordsViewModel(
     private fun onPrepareRecognitionError(entity: RecordEntity, throwable: Throwable) {
         logger.with(this@RecordsViewModel).add("onPrepareRecognitionError $throwable").log()
         val model = mLiveModel.value ?: return
-        mLiveModel.value = model.copy(solution = resolver.resolve(throwable, Interaction.Alert, entity.getTag()))
+        mLiveModel.value = model.copy(solution = resolver.resolve(throwable, Interaction.Alert, entity.getMap()))
     }
 
     override fun requestSynchronize(entity: RecordEntity) {
@@ -227,7 +232,7 @@ class RecordsViewModel(
 
     }
 
-    fun onLanguageSelectorSelected(details: Map<String, String>) {
+    fun onLanguageSelectorSelected(details: Any) {
 
     }
 
@@ -239,13 +244,20 @@ class RecordsViewModel(
         navigation.navigateFeature(FEATURE_PRELOAD, RecordTag(recordEntity.crc32))
     }
 
+    fun onPermissionRequestHandled() {
+        val model = mLiveModel.value ?: return
+        mLiveModel.value = model.copy(requestPermissionSdCard = false, recordToPlay = null)
+    }
+
 }
 
 data class Model(
     val state: PlaybackState = PlaybackState(),
     val share: Share = Share(),
     val solution: ErrorSolution = ErrorSolution(),
-    val args: TranscriptionArgs = TranscriptionArgs()
+    val args: TranscriptionArgs = TranscriptionArgs(),
+    val requestPermissionSdCard: Boolean = false,
+    val recordToPlay: RecordEntity? = null
 )
 
 data class Share(

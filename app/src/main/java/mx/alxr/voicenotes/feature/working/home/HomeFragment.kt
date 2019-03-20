@@ -195,6 +195,7 @@ class HomeFragment : Fragment(), Observer<Model>, View.OnTouchListener, Permissi
     }
 
     override fun onPermissionGranted(response: PermissionGrantedResponse?) {
+
     }
 
     override fun onPermissionRationaleShouldBeShown(permission: PermissionRequest?, token: PermissionToken?) {

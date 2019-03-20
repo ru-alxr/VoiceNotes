@@ -4,7 +4,7 @@ interface IErrorMessageResolver {
 
     fun resolve(throwable: Throwable): ErrorSolution
     fun resolve(throwable: Throwable, defaultInteraction: Interaction): ErrorSolution
-    fun resolve(throwable: Throwable, defaultInteraction: Interaction, details:Map<String, String>): ErrorSolution
+    fun resolve(throwable: Throwable, defaultInteraction: Interaction, details:Any): ErrorSolution
 
 }
 
@@ -17,7 +17,7 @@ class ErrorSolution(
     val message: String = "",
     val interaction: Interaction = Interaction.None,
     val resolutionRequired: String = "",
-    val details:Map<String, String> = HashMap()
+    val details:Any = Unit
 )
 
 enum class Interaction {

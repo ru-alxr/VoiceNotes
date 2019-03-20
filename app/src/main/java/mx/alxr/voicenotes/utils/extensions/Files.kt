@@ -7,6 +7,7 @@ import java.util.zip.CRC32
 import java.util.zip.CheckedInputStream
 
 fun File.crc32(): Long {
+    if (!exists()) return -2
     CheckedInputStream(FileInputStream(absolutePath), CRC32()).use {
         val buf = ByteArray(android.os.StatFs(parentFile.path).blockSizeLong.toInt())
         var i: Int

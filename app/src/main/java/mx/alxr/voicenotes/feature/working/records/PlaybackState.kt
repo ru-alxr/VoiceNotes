@@ -1,6 +1,7 @@
 package mx.alxr.voicenotes.feature.working.records
 
 import mx.alxr.voicenotes.repository.record.RecordEntity
+import mx.alxr.voicenotes.repository.record.extractCrc32
 
 enum class MediaPlayerState {
     Playing,
@@ -27,6 +28,10 @@ data class PlaybackState(
 
     fun isSameFile(entity: RecordEntity): Boolean {
         return crc32 == entity.crc32
+    }
+
+    fun isSameFile(mapping: Map<String, Any>): Boolean {
+        return crc32 == mapping.extractCrc32()
     }
 
 }

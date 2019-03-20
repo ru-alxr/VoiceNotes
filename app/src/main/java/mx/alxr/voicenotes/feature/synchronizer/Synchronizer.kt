@@ -1,10 +1,13 @@
 package mx.alxr.voicenotes.feature.synchronizer
 
+import android.media.MediaMetadataRetriever
 import android.net.Uri
+import android.os.Environment
 import com.google.android.gms.tasks.OnFailureListener
 import com.google.android.gms.tasks.OnSuccessListener
 import com.google.firebase.firestore.DocumentReference
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.storage.FileDownloadTask
 import com.google.firebase.storage.FirebaseStorage
 import com.google.firebase.storage.StorageMetadata
 import com.google.firebase.storage.UploadTask
@@ -12,36 +15,43 @@ import io.reactivex.Single
 import io.reactivex.SingleEmitter
 import io.reactivex.disposables.Disposable
 import io.reactivex.schedulers.Schedulers
+import mx.alxr.voicenotes.R
 import mx.alxr.voicenotes.db.AppDatabase
-import mx.alxr.voicenotes.repository.media.IMediaStorage
-import mx.alxr.voicenotes.repository.record.RecordDAO
-import mx.alxr.voicenotes.repository.record.RecordEntity
-import mx.alxr.voicenotes.repository.record.toRemoteObject
+import mx.alxr.voicenotes.repository.record.*
+import mx.alxr.voicenotes.utils.errors.ProjectException
+import mx.alxr.voicenotes.utils.extensions.crc32
 import mx.alxr.voicenotes.utils.extensions.md5Hash
 import mx.alxr.voicenotes.utils.logger.ILogger
 import mx.alxr.voicenotes.utils.rx.FlowableDisposable
 import mx.alxr.voicenotes.utils.rx.SingleDisposable
 import java.io.File
+import java.io.FileInputStream
+import java.io.FileOutputStream
+import java.io.InputStream
+import java.text.SimpleDateFormat
 import java.util.*
 import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
+import kotlin.collections.HashMap
 
 class Synchronizer(
-    db: AppDatabase,
     private val firestore: FirebaseFirestore,
+    private val recordsRepository: IRecordsRepository,
+    private val extension: String,
     storage: FirebaseStorage,
-    private val mediaStorage: IMediaStorage,
     @Suppress("unused") private val logger: ILogger
 ) : ISynchronizer {
 
     private val mStorageRef = storage.reference
-    private val recordsDao: RecordDAO = db.recordDataDAO()
     private var mDisposable: Disposable? = null
     private var mPerformDisposable: Disposable? = null
+
+    private val downloadFiles:MutableMap<Long, FileDownloadTask> = HashMap()
 
     override fun onStart() {
         logger.with(this@Synchronizer).add("onStart").log()
         mDisposable?.dispose()
-        mDisposable = recordsDao
+        mDisposable = recordsRepository
             .getAll(false)
             .subscribeOn(Schedulers.io())
             .observeOn(Schedulers.io())
@@ -54,6 +64,56 @@ class Synchronizer(
         logger.with(this@Synchronizer).add("onStop").log()
         mDisposable?.dispose()
         mPerformDisposable?.dispose()
+    }
+
+    override fun fetchFile(entity: RecordEntity): Single<File> {
+        return Single
+            .create { emitter:SingleEmitter<File> -> performDownload(entity, emitter) }
+            .doOnDispose {  }
+    }
+
+    private fun getTask(entity: RecordEntity):FileDownloadTask?{
+        return downloadFiles[entity.crc32]
+    }
+
+    private fun cancelTask(entity: RecordEntity){
+        val task = getTask(entity)
+        task?.cancel()
+        removeTask(entity)
+    }
+
+    private fun removeTask(entity: RecordEntity){
+        downloadFiles.remove(entity.crc32)
+    }
+
+    private fun holdTask(entity: RecordEntity, task:FileDownloadTask){
+        downloadFiles[entity.crc32] = task
+    }
+
+    private fun performDownload(entity: RecordEntity, emitter: SingleEmitter<File>){
+        cancelTask(entity)
+        val userFolderReference = mStorageRef.child(entity.userId)
+        val fileReference = userFolderReference.child(entity.fileName)
+        val localFolder: File = getDirectory()
+        val localFile = File(localFolder, entity.fileName)
+        val executor = Executors.newSingleThreadExecutor()
+        val task = fileReference.getFile(localFile)
+        task
+            .addOnSuccessListener(executor, OnSuccessListener {
+                val check = localFile.crc32() == entity.crc32
+                removeTask(entity)
+                if (check){
+                    recordsRepository.insert(entity.copy(isFileDownloaded = true))
+                    emitter.onSuccess(localFile)
+                }else{
+                    onFailure(emitter, ProjectException(R.string.error_file_download))
+                }
+            })
+            .addOnFailureListener (executor, OnFailureListener {
+                removeTask(entity)
+                onFailure(emitter, it)
+            })
+        holdTask(entity, task)
     }
 
     private fun performWith(queue: LinkedList<RecordEntity>) {
@@ -78,7 +138,7 @@ class Synchronizer(
                         isFileUploaded = true
                     )
                     logger.with(this@Synchronizer).add("performWith: doOnSuccess $entity").log()
-                    recordsDao.insert(entity)
+                    recordsRepository.insert(entity)
                 }
             }
             .subscribeWith(SingleDisposable<RemoteRecord>(
@@ -110,7 +170,7 @@ class Synchronizer(
         }
         val userFolderReference = mStorageRef.child(entity.userId)
         val fileReference = userFolderReference.child(entity.fileName)
-        val localFolder: File = mediaStorage.getDirectory()
+        val localFolder: File = getDirectory()
         val localFile = File(localFolder, entity.fileName)
         val localFileUri = Uri.fromFile(localFile)
         val controlHash = localFile.md5Hash()
@@ -149,7 +209,7 @@ class Synchronizer(
             )
             return
         }
-        recordsDao.insert(entity.copy(isFileUploaded = true))
+        recordsRepository.insert(entity.copy(isFileUploaded = true))
         onPostFileUploadSuccess(entity, emitter)
     }
 
@@ -267,6 +327,95 @@ class Synchronizer(
             .collection("records")
             .document(fileName)
     }
+
+    private val format: SimpleDateFormat by lazy { SimpleDateFormat(DATE_PATTERN, Locale.US) }
+
+    override fun storeFile(file: File, languageCode: String): Single<Unit> {
+        return Single
+            .fromCallable {
+                val mmr = MediaMetadataRetriever()
+                mmr.setDataSource(file.absolutePath)
+                val duration = mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION)
+                val durationLong = try {
+                    duration.toLong()
+                } catch (e: java.lang.Exception) {
+                    throw ProjectException(R.string.store_file_error)
+                }
+                val directory = getDirectory()
+                val date = format.format(Date())
+                val name = String.format(FILE_NAME_PATTERN, date, extension)
+                val createdAt = file.lastModified()
+                val target = File(directory, name)
+                try {
+                    val inputStream: InputStream = FileInputStream(file)
+                    val size = inputStream.available()
+                    val buffer = ByteArray(size)
+                    inputStream.read(buffer)
+                    inputStream.close()
+                    val fos = FileOutputStream(target)
+                    fos.write(buffer)
+                    fos.close()
+                } catch (e: Exception) {
+                    throw ProjectException(R.string.store_file_error)
+                }
+                val crc32Original = file.crc32()
+                val crc32Copy = target.crc32()
+                if (crc32Copy != crc32Original) {
+                    target.delete()
+                    throw ProjectException(R.string.store_file_error)
+                }
+                RecordImp(
+                    fileName = name,
+                    crc32 = crc32Copy,
+                    recordDuration = durationLong,
+                    date = createdAt,
+                    language = languageCode
+                )
+            }
+            .flatMap { recordsRepository.insert(it) }
+            .subscribeOn(Schedulers.io())
+    }
+
+    //  if (!target.exists()) throw ProjectException(R.string.fetch_file_error_no_local_file)
+    //  if (crc32 != currentCrc32) throw ProjectException(R.string.fetch_file_error_crc32)
+    override fun getFile(entity: RecordEntity): Single<File> {
+        return checkIfFileIsPresentLocally(entity.fileName, entity.crc32)
+            .flatMap {
+                if (it) {
+                    val directory = getDirectory()
+                    val target = File(directory, entity.fileName)
+                    Single.just(target)
+                } else {
+                    fetchFile(entity)
+                }
+            }
+    }
+
+    private fun checkIfFileIsPresentLocally(name: String, crc32: Long): Single<Boolean> {
+        return Single
+            .fromCallable {
+                val directory = getDirectory()
+                val target = File(directory, name)
+                var result: Boolean = target.exists()
+                val currentCrc32 = target.crc32()
+                if (result) result = crc32 == currentCrc32
+                result
+            }
+    }
+
+    @Throws(ProjectException::class)
+    override fun getDirectory(): File {
+        val directory = File(Environment.getExternalStorageDirectory(), DIRECTORY_NAME)
+        if (!directory.exists()) {
+            directory.mkdirs()
+        }
+        if (!directory.exists()) throw ProjectException(R.string.store_file_error_no_directory)
+        return directory
+    }
+
+    private fun fetchRemoteFile(): Single<File> {
+        return Single.just(null)
+    }
 }
 
 data class RemoteRecord(
@@ -279,3 +428,42 @@ data class RemoteRecord(
     val languageCode: String,
     val uid: String
 )
+
+private class RecordImp(
+    val fileName: String,
+    private val crc32: Long,
+    private val recordDuration: Long,
+    private val date: Long,
+    private val language: String
+) : IRecord {
+    override fun getDate(): Long {
+        return date
+    }
+
+    override fun getCRC32(): Long {
+        return crc32
+    }
+
+    override fun getName(): String {
+        return fileName
+    }
+
+    override fun getDuration(): Long {
+        return recordDuration
+    }
+
+    override fun getTranscription(): String {
+        return ""
+    }
+
+    override fun getLanguageCode(): String {
+        return language
+    }
+
+    override fun toString(): String {
+        val seconds = TimeUnit.MILLISECONDS.toSeconds(recordDuration)
+        val millis = recordDuration - TimeUnit.SECONDS.toMillis(seconds)
+        return "$fileName $seconds.$millis sec"
+    }
+
+}

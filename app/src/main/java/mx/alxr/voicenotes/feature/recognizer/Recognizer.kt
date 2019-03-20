@@ -2,14 +2,14 @@ package mx.alxr.voicenotes.feature.recognizer
 
 import io.reactivex.Single
 import mx.alxr.voicenotes.R
-import mx.alxr.voicenotes.repository.media.IMediaStorage
+import mx.alxr.voicenotes.feature.synchronizer.ISynchronizer
 import mx.alxr.voicenotes.repository.record.RecordEntity
 import mx.alxr.voicenotes.repository.user.IUserRepository
 import mx.alxr.voicenotes.repository.wallet.IWalletRepository
 import mx.alxr.voicenotes.utils.errors.ProjectException
 
 class Recognizer(
-    private val mediaStorage: IMediaStorage,
+    private val synchronizer: ISynchronizer,
     private val userRepository: IUserRepository,
     private val walletRepository: IWalletRepository
 ) : IRecognizer {
@@ -18,8 +18,8 @@ class Recognizer(
         return checkUser()
             .flatMap { checkEntity(entity) }
             .flatMap {
-                mediaStorage
-                    .getFile(entity.fileName, entity.crc32)
+                synchronizer
+                    .getFile(entity)
                     .flatMap {
                         Single
                             .just(

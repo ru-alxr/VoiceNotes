@@ -7,7 +7,7 @@ import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.Disposable
 import io.reactivex.schedulers.Schedulers
 import mx.alxr.voicenotes.feature.recorder.IRecorder
-import mx.alxr.voicenotes.repository.media.IMediaStorage
+import mx.alxr.voicenotes.feature.synchronizer.ISynchronizer
 import mx.alxr.voicenotes.repository.user.IUserRepository
 import mx.alxr.voicenotes.utils.logger.ILogger
 import mx.alxr.voicenotes.utils.rx.SingleDisposable
@@ -16,7 +16,7 @@ class HomeViewModel(
     userRepository: IUserRepository,
     private val logger: ILogger,
     private val recorder: IRecorder,
-    private val storage: IMediaStorage
+    private val synchronizer: ISynchronizer
 ) : ViewModel() {
 
     private val mLiveModel: MutableLiveData<Model> = MutableLiveData()
@@ -65,7 +65,7 @@ class HomeViewModel(
 
         if (store) {
             val model = mLiveModel.value ?:return
-            mStoreMediaDisposables = storage
+            mStoreMediaDisposables = synchronizer
                 .storeFile(recorder.getRecord(), model.languageCode)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
