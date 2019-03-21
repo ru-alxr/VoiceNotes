@@ -13,6 +13,8 @@ import java.util.concurrent.Executors
 import java.util.concurrent.ScheduledExecutorService
 import java.util.concurrent.TimeUnit
 
+const val TICK_PERIOD = 250L
+
 class Player(private val logger: ILogger) : IPlayer, MediaPlayer.OnErrorListener, MediaPlayer.OnSeekCompleteListener,
     MediaPlayer.OnCompletionListener {
 
@@ -65,7 +67,7 @@ class Player(private val logger: ILogger) : IPlayer, MediaPlayer.OnErrorListener
         } catch (e: IOException) {
             logger.with(this).add("play error $e").log()
             mediaPlayer.release()
-            mPlayback?.onProgress(0)
+            mPlayback?.onComplete()
             e.printStackTrace()
             return
         }
@@ -98,12 +100,16 @@ class Player(private val logger: ILogger) : IPlayer, MediaPlayer.OnErrorListener
         service.scheduleAtFixedRate(object : Runnable {
             override fun run() {
                 if (mediaPlayer.isReleased) return
-                emitter?.apply { onNext(mediaPlayer.currentPosition) }
+                emitter?.apply {
+                    onNext(mediaPlayer.currentPosition)
+                }
             }
-        }, 0, 50, TimeUnit.MILLISECONDS)
+        }, 0, TICK_PERIOD, TimeUnit.MILLISECONDS)
         mDisposable = getFlowable()
             .observeOn(AndroidSchedulers.mainThread())
-            .doOnNext { mPlayback?.onProgress(it) }
+            .doOnNext {
+                mPlayback?.onProgress(it)
+            }
             .subscribe()
         return service
     }

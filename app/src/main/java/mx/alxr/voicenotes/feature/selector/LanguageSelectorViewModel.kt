@@ -131,7 +131,7 @@ class LanguageSelectorViewModel(
                     ))
             } else {
                 mDisposable = recordsRepository
-                    .setLanguage(tag as Long, language)
+                    .setLanguage(tag as String, language)
                     .subscribeOn(Schedulers.io())
                     .observeOn(AndroidSchedulers.mainThread())
                     .subscribeWith(SingleDisposable<Unit>(

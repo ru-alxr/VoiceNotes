@@ -37,7 +37,7 @@ val APPLICATION_MODULE = module {
 
     single(createOnStart = true) { AppDatabase.getInstance(androidContext()) as AppDatabase }
 
-    single { FeatureNavigation() as IFeatureNavigation }
+    single { FeatureNavigation(logger = get()) as IFeatureNavigation }
 
     single { StringResources(androidContext()) as IStringResources }
 

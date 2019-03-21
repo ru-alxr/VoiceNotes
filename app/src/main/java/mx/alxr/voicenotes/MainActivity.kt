@@ -65,10 +65,10 @@ class MainActivity : AppCompatActivity() {
                             }
                         }
                         FEATURE_BACK -> mNavController.popBackStack()
+                        FEATURE_SIGN_OUT -> mNavController.navigate(R.id.action_to_auth_user, args)
                     }
                 }
             )
-
     }
 
     override fun onResume() {
@@ -96,7 +96,7 @@ fun UserState.create(): Bundle {
                 is Boolean -> putBoolean(PAYLOAD_1, args)
                 is RecordTag -> {
                     putBoolean(PAYLOAD_1, true)
-                    putLong(PAYLOAD_2, args.crc32)
+                    putString(PAYLOAD_2, args.uniqueId)
                 }
             }
         }

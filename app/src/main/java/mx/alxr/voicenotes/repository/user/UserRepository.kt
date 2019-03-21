@@ -1,5 +1,6 @@
 package mx.alxr.voicenotes.repository.user
 
+import android.os.Environment
 import io.reactivex.Flowable
 import io.reactivex.Single
 import io.reactivex.schedulers.Schedulers
@@ -7,13 +8,20 @@ import mx.alxr.voicenotes.db.AppDatabase
 import mx.alxr.voicenotes.repository.language.LanguageDAO
 import mx.alxr.voicenotes.repository.language.LanguageEntity
 import mx.alxr.voicenotes.repository.language.MAX_LANGUAGES
+import mx.alxr.voicenotes.repository.record.DIRECTORY_NAME
+import mx.alxr.voicenotes.repository.record.RecordDAO
 import mx.alxr.voicenotes.repository.remote.firebaseuser.ProjectUser
 import mx.alxr.voicenotes.utils.logger.ILogger
+import java.io.File
 
-class UserRepository(db: AppDatabase, private val logger: ILogger) : IUserRepository {
+class UserRepository(
+    db: AppDatabase,
+    private val logger: ILogger
+) : IUserRepository {
 
     private val mUserDAO: UserDAO = db.userDataDAO()
     private val mLanguageDAO: LanguageDAO = db.languageDataDAO()
+    private val mRecordsDAO: RecordDAO by lazy { db.recordDataDAO() }
 
     private fun dbchck(): Single<Unit> {
         return Single
@@ -103,6 +111,45 @@ class UserRepository(db: AppDatabase, private val logger: ILogger) : IUserReposi
                 mUserDAO.insert(it.copy(isFetchingRecordsPerformed = true))
                 Single.just(Unit)
             }
+    }
+
+    override fun signOut(): Single<Unit> {
+        return Single.fromCallable {
+            mUserDAO.insert(UserEntity())
+            mRecordsDAO.deleteAll()
+            try {
+                val directory = File(Environment.getExternalStorageDirectory(), DIRECTORY_NAME)
+                logger
+                    .with(this)
+                    .add("signOut directory $DIRECTORY_NAME ${if (directory.exists()) "EXISTS" else "NOT EXISTS"}")
+                    .log()
+                if (directory.exists()) {
+                    val result = clearFolder(directory, 0)
+                    logger
+                        .with(this@UserRepository)
+                        .add("signOut directory $DIRECTORY_NAME ${if (!directory.exists()) "WAS REMOVED" else "WAS NOT REMOVED"} $result FILES WAS DELETED")
+                        .log()
+                }
+            } catch (e: Exception) {
+                logger.with(this).add("signOut error $e").log()
+            }
+            Unit
+        }
+    }
+
+    private fun clearFolder(file : File, count:Int):Int{
+        var result = 0
+        if (file.isDirectory){
+            val files = file.listFiles()
+            for (every in files){
+                result += clearFolder(every, 0)
+            }
+            file.delete()
+        }
+        else {
+            if (file.delete()) result = 1
+        }
+        return result + count
     }
 
 }

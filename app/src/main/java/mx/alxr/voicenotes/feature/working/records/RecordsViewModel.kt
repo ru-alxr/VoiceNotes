@@ -16,8 +16,10 @@ import mx.alxr.voicenotes.feature.player.IPlayer
 import mx.alxr.voicenotes.feature.recognizer.IRecognizer
 import mx.alxr.voicenotes.feature.recognizer.TranscriptionArgs
 import mx.alxr.voicenotes.feature.synchronizer.ISynchronizer
+import mx.alxr.voicenotes.repository.record.IRecordsRepository
 import mx.alxr.voicenotes.repository.record.RecordEntity
 import mx.alxr.voicenotes.repository.record.RecordTag
+import mx.alxr.voicenotes.repository.record.RecordsRepository
 import mx.alxr.voicenotes.utils.errors.ErrorSolution
 import mx.alxr.voicenotes.utils.errors.IErrorMessageResolver
 import mx.alxr.voicenotes.utils.errors.Interaction
@@ -32,13 +34,17 @@ class RecordsViewModel(
     private val resolver: IErrorMessageResolver,
     private val logger: ILogger,
     private val recognizer: IRecognizer,
-    private val navigation: IFeatureNavigation
+    private val navigation: IFeatureNavigation,
+    private val recordsRepository: IRecordsRepository,
+    val map: MutableMap<String, Int>
 ) : ViewModel(), ICallback, IPlayback {
 
     private val mLiveModel: MutableLiveData<Model> = MutableLiveData()
     private val dao = db.recordDataDAO()
     private var mDisposable: Disposable? = null
     private var mFeatureDisposable: Disposable? = null
+
+    private val deleteEntryMap: MutableMap<String, Disposable> = HashMap()
 
     init {
         mLiveModel.value = Model()
@@ -50,7 +56,7 @@ class RecordsViewModel(
     }
 
     fun getLiveData(): LiveData<PagedList<RecordEntity>> {
-        return LivePagedListBuilder<Int, RecordEntity>(dao.getAllPaged(), 10).build()
+        return LivePagedListBuilder<Int, RecordEntity>(dao.getAllPaged(deleted = false), 10).build()
     }
 
     override fun onStartTrackingTouch() {
@@ -72,7 +78,9 @@ class RecordsViewModel(
 
     override fun onProgress(progress: Int) {
         val model = mLiveModel.value ?: return
-        mLiveModel.value = model.copy(state = model.state.copy(progress = progress))
+        if (model.state.uniqueId.isEmpty()) return
+        map[model.state.uniqueId] = progress
+        mLiveModel.value = model.copy(progressUpdate = !model.progressUpdate)
     }
 
     override fun onPaused() {
@@ -87,18 +95,21 @@ class RecordsViewModel(
 
     override fun onComplete() {
         val model = mLiveModel.value ?: return
-        val duration = model.state.duration
+        if (model.state.uniqueId.isEmpty()) return
+        map[model.state.uniqueId] = 0
         mLiveModel.value =
-            model.copy(state = model.state.copy(mpState = MediaPlayerState.Stopping, progress = duration))
+            model.copy(state = model.state.copy(mpState = MediaPlayerState.Stopping))
     }
 
     override fun onCleared() {
         mDisposable?.dispose()
         player.setPlayback(null)
+        for (key in deleteEntryMap.keys) deleteEntryMap[key]?.dispose()
+        deleteEntryMap.clear()
         super.onCleared()
     }
 
-    override fun onPlayButtonClick(entity: RecordEntity, progress: Int) {
+    override fun onPlayButtonClick(entity: RecordEntity) {
         val model = mLiveModel.value ?: return
         mLiveModel.value = model.copy(requestPermissionSdCard = true, recordToPlay = entity)
     }
@@ -122,30 +133,23 @@ class RecordsViewModel(
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribeWith(
                     SingleDisposable<File>(
-                        success = { onFileReady(entity, it, progress) },
+                        success = { onFileReady(entity, it) },
                         error = this@RecordsViewModel::onFileError
                     )
                 )
         }
     }
 
-    override fun onSeekBarChange(position: Int) {
+    private fun onFileReady(entity: RecordEntity, file: File) {
         val model = mLiveModel.value ?: return
-        model.state.apply {
-            mLiveModel.value = model.copy(state = copy(progress = position))
-            return@apply
-        }
-    }
-
-    private fun onFileReady(entity: RecordEntity, file: File, progress: Int) {
-        val model = mLiveModel.value ?: return
+        val progress: Int = map[entity.uniqueId] ?: 0
+        logger.with(this@RecordsViewModel).add("onFileReady SET PROGRESS $progress").log()
         player.play(file, entity.duration, progress)
         mLiveModel.value =
             model.copy(
                 state = PlaybackState(
                     duration = entity.duration.toInt(),
-                    progress = progress,
-                    crc32 = entity.crc32,
+                    uniqueId = entity.uniqueId,
                     mpState = MediaPlayerState.Playing
                 )
             )
@@ -220,7 +224,7 @@ class RecordsViewModel(
     }
 
     override fun requestSynchronize(entity: RecordEntity) {
-
+        synchronizer.onStart()
     }
 
     fun onShareHandled() {
@@ -240,13 +244,40 @@ class RecordsViewModel(
 
     }
 
+    override fun requestDeleteRecord(recordEntity: RecordEntity) {
+        val model = mLiveModel.value ?: return
+        mLiveModel.value = model.copy(recordToDelete = recordEntity)
+    }
+
     override fun requestLanguageChange(recordEntity: RecordEntity) {
-        navigation.navigateFeature(FEATURE_PRELOAD, RecordTag(recordEntity.crc32))
+        navigation.navigateFeature(FEATURE_PRELOAD, RecordTag(recordEntity.uniqueId))
     }
 
     fun onPermissionRequestHandled() {
         val model = mLiveModel.value ?: return
         mLiveModel.value = model.copy(requestPermissionSdCard = false, recordToPlay = null)
+    }
+
+    fun onDeleteRecordHandled() {
+        val model = mLiveModel.value ?: return
+        mLiveModel.value = model.copy(recordToDelete = null)
+    }
+
+    fun onDeleteRecordConfirm(entity: RecordEntity) {
+        var disposable:Disposable? = deleteEntryMap[entity.uniqueId]
+        if (disposable != null) return
+        disposable = recordsRepository
+            .markDeleted(entity)
+            .subscribeOn(Schedulers.io())
+            .subscribeWith(SingleDisposable<Unit>(
+                success = {
+                    deleteEntryMap.remove(entity.uniqueId)
+                },
+                error = {
+                    deleteEntryMap.remove(entity.uniqueId)
+                }
+            ))
+        deleteEntryMap[entity.uniqueId] = disposable
     }
 
 }
@@ -257,7 +288,9 @@ data class Model(
     val solution: ErrorSolution = ErrorSolution(),
     val args: TranscriptionArgs = TranscriptionArgs(),
     val requestPermissionSdCard: Boolean = false,
-    val recordToPlay: RecordEntity? = null
+    val recordToPlay: RecordEntity? = null,
+    val progressUpdate: Boolean = false,
+    val recordToDelete: RecordEntity? = null
 )
 
 data class Share(

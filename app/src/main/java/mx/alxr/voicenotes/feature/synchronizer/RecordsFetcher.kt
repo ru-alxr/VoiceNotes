@@ -49,13 +49,14 @@ class RecordsFetcher(
                                     languageCode = languageCode,
                                     userId = uid,
                                     isFileUploaded = true,
-                                    isFileDownloaded = false
+                                    isFileDownloaded = false,
+                                    uniqueId = uniqueId
                                 )
                                 count++
                                 recordsDao.insert(entity)
                             }
-                            emitter.onSuccess(count)
                         }
+                        emitter.onSuccess(count)
                     } catch (e: Exception) {
                         e.printStackTrace()
                         onFailure(emitter, NullPointerException("No record"))

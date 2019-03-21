@@ -7,17 +7,16 @@ import com.google.android.gms.tasks.OnFailureListener
 import com.google.android.gms.tasks.OnSuccessListener
 import com.google.firebase.firestore.DocumentReference
 import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.storage.FileDownloadTask
-import com.google.firebase.storage.FirebaseStorage
-import com.google.firebase.storage.StorageMetadata
-import com.google.firebase.storage.UploadTask
+import com.google.firebase.storage.*
 import io.reactivex.Single
 import io.reactivex.SingleEmitter
 import io.reactivex.disposables.Disposable
 import io.reactivex.schedulers.Schedulers
 import mx.alxr.voicenotes.R
-import mx.alxr.voicenotes.db.AppDatabase
-import mx.alxr.voicenotes.repository.record.*
+import mx.alxr.voicenotes.repository.record.DIRECTORY_NAME
+import mx.alxr.voicenotes.repository.record.IRecordsRepository
+import mx.alxr.voicenotes.repository.record.RecordEntity
+import mx.alxr.voicenotes.repository.record.toRemoteObject
 import mx.alxr.voicenotes.utils.errors.ProjectException
 import mx.alxr.voicenotes.utils.extensions.crc32
 import mx.alxr.voicenotes.utils.extensions.md5Hash
@@ -31,7 +30,6 @@ import java.io.InputStream
 import java.text.SimpleDateFormat
 import java.util.*
 import java.util.concurrent.Executors
-import java.util.concurrent.TimeUnit
 import kotlin.collections.HashMap
 
 class Synchronizer(
@@ -46,17 +44,21 @@ class Synchronizer(
     private var mDisposable: Disposable? = null
     private var mPerformDisposable: Disposable? = null
 
-    private val downloadFiles:MutableMap<Long, FileDownloadTask> = HashMap()
+    private val downloadFiles: MutableMap<String, FileDownloadTask> = HashMap()
 
     override fun onStart() {
         logger.with(this@Synchronizer).add("onStart").log()
         mDisposable?.dispose()
+        mPerformDisposable?.dispose()
         mDisposable = recordsRepository
             .getAll(false)
             .subscribeOn(Schedulers.io())
             .observeOn(Schedulers.io())
             .subscribeWith(FlowableDisposable<List<RecordEntity>>(
-                next = { performWith(LinkedList(it)) }
+                next = { performWith(LinkedList(it)) },
+                error = {
+                    it.printStackTrace()
+                }
             ))
     }
 
@@ -68,29 +70,28 @@ class Synchronizer(
 
     override fun fetchFile(entity: RecordEntity): Single<File> {
         return Single
-            .create { emitter:SingleEmitter<File> -> performDownload(entity, emitter) }
-            .doOnDispose {  }
+            .create { emitter: SingleEmitter<File> -> performDownload(entity, emitter) }
     }
 
-    private fun getTask(entity: RecordEntity):FileDownloadTask?{
-        return downloadFiles[entity.crc32]
+    private fun getTask(entity: RecordEntity): FileDownloadTask? {
+        return downloadFiles[entity.uniqueId]
     }
 
-    private fun cancelTask(entity: RecordEntity){
+    private fun cancelTask(entity: RecordEntity) {
         val task = getTask(entity)
         task?.cancel()
         removeTask(entity)
     }
 
-    private fun removeTask(entity: RecordEntity){
-        downloadFiles.remove(entity.crc32)
+    private fun removeTask(entity: RecordEntity) {
+        downloadFiles.remove(entity.uniqueId)
     }
 
-    private fun holdTask(entity: RecordEntity, task:FileDownloadTask){
-        downloadFiles[entity.crc32] = task
+    private fun holdTask(entity: RecordEntity, task: FileDownloadTask) {
+        downloadFiles[entity.uniqueId] = task
     }
 
-    private fun performDownload(entity: RecordEntity, emitter: SingleEmitter<File>){
+    private fun performDownload(entity: RecordEntity, emitter: SingleEmitter<File>) {
         cancelTask(entity)
         val userFolderReference = mStorageRef.child(entity.userId)
         val fileReference = userFolderReference.child(entity.fileName)
@@ -102,14 +103,14 @@ class Synchronizer(
             .addOnSuccessListener(executor, OnSuccessListener {
                 val check = localFile.crc32() == entity.crc32
                 removeTask(entity)
-                if (check){
+                if (check) {
                     recordsRepository.insert(entity.copy(isFileDownloaded = true))
                     emitter.onSuccess(localFile)
-                }else{
+                } else {
                     onFailure(emitter, ProjectException(R.string.error_file_download))
                 }
             })
-            .addOnFailureListener (executor, OnFailureListener {
+            .addOnFailureListener(executor, OnFailureListener {
                 removeTask(entity)
                 onFailure(emitter, it)
             })
@@ -125,6 +126,13 @@ class Synchronizer(
             .observeOn(Schedulers.io())
             .doOnSuccess {
                 it?.apply {
+                    if (it.delete) {
+                        logger.with(this@Synchronizer).add("performWith: doOnSuccess DELETE ${it.fileName}").log()
+                        recordsRepository.delete(uniqueId)
+                        return@doOnSuccess
+                    }
+                    val localFolder: File = getDirectory()
+                    val localFile = File(localFolder, fileName)
                     val entity = RecordEntity(
                         fileName = fileName,
                         date = date,
@@ -135,9 +143,11 @@ class Synchronizer(
                         isSynchronized = true,
                         languageCode = languageCode,
                         userId = uid,
-                        isFileUploaded = true
+                        isFileUploaded = true,
+                        isFileDownloaded = localFile.exists(),
+                        uniqueId = uniqueId
                     )
-                    logger.with(this@Synchronizer).add("performWith: doOnSuccess $entity").log()
+                    logger.with(this@Synchronizer).add("performWith: doOnSuccess ${entity.fileName}").log()
                     recordsRepository.insert(entity)
                 }
             }
@@ -149,6 +159,10 @@ class Synchronizer(
                 },
                 error = {
                     //todo
+                    // next attempt when Activity#onStart will be triggered
+
+                    it.printStackTrace()
+
                 }
             ))
     }
@@ -163,7 +177,11 @@ class Synchronizer(
             emitter.onError(NullPointerException("No records"))
             return
         }
-        logger.with(this@Synchronizer).add("syncRecord $entity").log()
+        logger.with(this@Synchronizer).add("syncRecord ${entity.fileName}").log()
+        if (entity.isDeleted) {
+            performDelete(entity, emitter)
+            return
+        }
         if (entity.isFileUploaded) {
             onPostFileUploadSuccess(entity, emitter)
             return
@@ -240,7 +258,7 @@ class Synchronizer(
 
     private fun updateRemoteRecord(entity: RecordEntity, emitter: SingleEmitter<RemoteRecord>) {
         val recordReference = getRef(entity.userId, entity.fileName)
-        logger.with(this@Synchronizer).add("updateRemoteRecord $entity").log()
+        logger.with(this@Synchronizer).add("updateRemoteRecord ${entity.fileName}").log()
         val executor = Executors.newSingleThreadExecutor()
         firestore
             .runTransaction { transaction ->
@@ -364,20 +382,19 @@ class Synchronizer(
                     target.delete()
                     throw ProjectException(R.string.store_file_error)
                 }
-                RecordImp(
-                    fileName = name,
+                AudioFile(
+                    name = name,
                     crc32 = crc32Copy,
-                    recordDuration = durationLong,
+                    duration = durationLong,
                     date = createdAt,
-                    language = languageCode
+                    language = languageCode,
+                    uniqueId = UUID.randomUUID().toString()
                 )
             }
             .flatMap { recordsRepository.insert(it) }
             .subscribeOn(Schedulers.io())
     }
 
-    //  if (!target.exists()) throw ProjectException(R.string.fetch_file_error_no_local_file)
-    //  if (crc32 != currentCrc32) throw ProjectException(R.string.fetch_file_error_crc32)
     override fun getFile(entity: RecordEntity): Single<File> {
         return checkIfFileIsPresentLocally(entity.fileName, entity.crc32)
             .flatMap {
@@ -388,6 +405,10 @@ class Synchronizer(
                 } else {
                     fetchFile(entity)
                 }
+            }
+            .flatMap {
+                if (entity.crc32 != it.crc32()) throw ProjectException(R.string.fetch_file_error_crc32)
+                Single.just(it)
             }
     }
 
@@ -413,11 +434,96 @@ class Synchronizer(
         return directory
     }
 
-    private fun fetchRemoteFile(): Single<File> {
-        return Single.just(null)
+    private fun performDelete(entity: RecordEntity, emitter: SingleEmitter<RemoteRecord>) {
+        val localFolder: File = getDirectory()
+        val localFile = File(localFolder, entity.fileName)
+        if (localFile.exists()) {
+            val result = localFile.delete()
+            logger.with(this@Synchronizer)
+                .add("local file ${entity.fileName} delete: ${if (result) "success" else "fail"}").log()
+        } else {
+            logger.with(this@Synchronizer).add("local file ${entity.fileName} is absent on device").log()
+        }
+        val ref = getRef(entity.userId, entity.fileName)
+        val executor = Executors.newSingleThreadExecutor()
+        ref
+            .delete()
+            .addOnSuccessListener(executor, OnSuccessListener {
+                logger.with(this@Synchronizer)
+                    .add("performDelete remote record ${entity.fileName} :OnSuccess ").log()
+                performDeleteRemoteFile(entity, emitter)
+            })
+            .addOnFailureListener(executor, OnFailureListener {
+                logger.with(this@Synchronizer)
+                    .add("performDelete remote record ${entity.fileName} :OnFailure ").log()
+                it.printStackTrace()
+                onFailure(emitter, it)
+            }
+            )
     }
+
+    private fun performDeleteRemoteFile(entity: RecordEntity, emitter: SingleEmitter<RemoteRecord>) {
+        val userFolderReference = mStorageRef.child(entity.userId)
+        val fileReference = userFolderReference.child(entity.fileName)
+        val executor = Executors.newSingleThreadExecutor()
+        fileReference
+            .delete()
+            .addOnSuccessListener(executor, OnSuccessListener {
+                logger.with(this@Synchronizer)
+                    .add("performDelete Remote File ${entity.fileName} :OnSuccess ").log()
+                entity.apply {
+                    val remoteStub = RemoteRecord(
+                        fileName = fileName,
+                        date = date,
+                        crc32 = crc32,
+                        duration = duration,
+                        transcription = transcription,
+                        isTranscribed = isTranscribed,
+                        uniqueId = uniqueId,
+                        uid = userId,
+                        languageCode = languageCode,
+                        delete = true
+                    )
+                    emitter.onSuccess(remoteStub)
+                }
+            })
+            .addOnFailureListener(executor, OnFailureListener {
+                logger.with(this@Synchronizer)
+                    .add("performDelete Remote File ${entity.fileName} :OnFailure ").log()
+                if (it is StorageException) {
+                    logger.with(this@Synchronizer)
+                        .add("performDelete Remote File ${entity.fileName} :OnFailure")
+                        .add("isRecoverableException=${it.isRecoverableException}")
+                        .add(if (it.isRecoverableException) "I hope next time I will succeed" else "but I suspect file was removed earlier")
+                        .log()
+                    if (!it.isRecoverableException) {
+                        entity.apply {
+                            val remoteStub = RemoteRecord(
+                                fileName = fileName,
+                                date = date,
+                                crc32 = crc32,
+                                duration = duration,
+                                transcription = transcription,
+                                isTranscribed = isTranscribed,
+                                uniqueId = uniqueId,
+                                uid = userId,
+                                languageCode = languageCode,
+                                delete = true
+                            )
+                            emitter.onSuccess(remoteStub)
+                        }
+                        return@OnFailureListener
+                    }
+                }
+                onFailure(emitter, it)
+            })
+    }
+
 }
 
+/**
+ * representation of object stored on firestore
+ */
 data class RemoteRecord(
     val fileName: String,
     val date: Long,
@@ -426,44 +532,19 @@ data class RemoteRecord(
     val transcription: String,
     val isTranscribed: Boolean,
     val languageCode: String,
-    val uid: String
+    val uid: String,
+    val uniqueId: String,
+    val delete: Boolean = false
 )
 
-private class RecordImp(
-    val fileName: String,
-    private val crc32: Long,
-    private val recordDuration: Long,
-    private val date: Long,
-    private val language: String
-) : IRecord {
-    override fun getDate(): Long {
-        return date
-    }
-
-    override fun getCRC32(): Long {
-        return crc32
-    }
-
-    override fun getName(): String {
-        return fileName
-    }
-
-    override fun getDuration(): Long {
-        return recordDuration
-    }
-
-    override fun getTranscription(): String {
-        return ""
-    }
-
-    override fun getLanguageCode(): String {
-        return language
-    }
-
-    override fun toString(): String {
-        val seconds = TimeUnit.MILLISECONDS.toSeconds(recordDuration)
-        val millis = recordDuration - TimeUnit.SECONDS.toMillis(seconds)
-        return "$fileName $seconds.$millis sec"
-    }
-
-}
+/**
+ * representation of just recorded file
+ */
+data class AudioFile(
+    val name: String,
+    val crc32: Long,
+    val duration: Long,
+    val date: Long,
+    val language: String,
+    val uniqueId: String
+)

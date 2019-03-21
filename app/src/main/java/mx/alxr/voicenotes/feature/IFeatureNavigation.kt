@@ -9,6 +9,8 @@ const val FEATURE_LOAD_RECORDS = 6
 
 const val FEATURE_BACK: Int = 7
 
+const val FEATURE_SIGN_OUT = 8
+
 interface IFeatureNavigation {
 
     fun navigateFeature(target: Int)

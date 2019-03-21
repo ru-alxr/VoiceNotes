@@ -1,7 +1,6 @@
 package mx.alxr.voicenotes.feature.working.records
 
 import mx.alxr.voicenotes.repository.record.RecordEntity
-import mx.alxr.voicenotes.repository.record.extractCrc32
 
 enum class MediaPlayerState {
     Playing,
@@ -12,9 +11,8 @@ enum class MediaPlayerState {
 
 data class PlaybackState(
     val mpState: MediaPlayerState = MediaPlayerState.Stopped,
-    val crc32: Long = -1,
+    val uniqueId: String = "",
     val duration: Int = 0,
-    val progress: Int = 0,
     val isTracking: Boolean = false
 ) {
 
@@ -22,16 +20,8 @@ data class PlaybackState(
         return mpState == MediaPlayerState.Playing
     }
 
-    fun isStopped(): Boolean {
-        return mpState == MediaPlayerState.Stopped
-    }
-
     fun isSameFile(entity: RecordEntity): Boolean {
-        return crc32 == entity.crc32
-    }
-
-    fun isSameFile(mapping: Map<String, Any>): Boolean {
-        return crc32 == mapping.extractCrc32()
+        return uniqueId == entity.uniqueId
     }
 
 }

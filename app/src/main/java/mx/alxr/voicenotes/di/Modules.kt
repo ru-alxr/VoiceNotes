@@ -107,7 +107,9 @@ val MAIN_VIEW_MODULE = module {
             resolver = get(),
             logger = get(),
             recognizer = get(),
-            navigation = get()
+            navigation = get(),
+            map = HashMap(),
+            recordsRepository = get()
         )
     }
 

@@ -40,33 +40,35 @@ class RecordsFragment : Fragment(), Observer<PagedList<RecordEntity>>, Permissio
     }
 
     private val mLayoutInflater: LayoutInflater by inject()
-    private lateinit var mAdapter: RecordsAdapter
+
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         val manager = LinearLayoutManager(activity)
-        manager.reverseLayout = true
+        //manager.reverseLayout = true
         records_recycler_view.layoutManager = manager
-        mAdapter = RecordsAdapter(logger, mLayoutInflater, mViewModel as ICallback)
-        records_recycler_view.adapter = mAdapter
+        val adapter = RecordsAdapter(logger, mLayoutInflater, mViewModel as ICallback, mViewModel.map)
+        records_recycler_view.adapter = adapter
         LinearLayoutManager(activity).reverseLayout = true
         mViewModel.getModel().observe(this, Observer { it?.apply { onModelChange(this) } })
         mViewModel.getLiveData().observe(this, this)
     }
 
     private fun onModelChange(model: Model) {
-        if (!::mAdapter.isInitialized) return
-        mAdapter.setState(model.state)
+        records_recycler_view?.apply {
+            (adapter as? RecordsAdapter)?.setState(model.state)
+        }
         handleError(model.solution)
         shareRecord(model.share)
         handleRecognition(model.args)
         handlePermissionRequest(model)
+        handleDeleteRecord(model.recordToDelete)
     }
 
     private fun handlePermissionRequest(model: Model) {
         if (!model.requestPermissionSdCard) return
         mViewModel.onPermissionRequestHandled()
-        val entity:RecordEntity = model.recordToPlay ?:return
+        val entity: RecordEntity = model.recordToPlay ?: return
         if (checkExternalStoragePermission()) mViewModel.onSdCardAccessGranted(entity)
     }
 
@@ -86,7 +88,7 @@ class RecordsFragment : Fragment(), Observer<PagedList<RecordEntity>>, Permissio
                 activity?.alertRequiredData(
                     solution.message
                 ) {
-                    when(solution.resolutionRequired){
+                    when (solution.resolutionRequired) {
                         REQUIRED_USER_REGISTRATION -> mViewModel.onRegistrationSelected()
                         REQUIRED_RECORD_LANGUAGE_CODE -> mViewModel.onLanguageSelectorSelected(solution.details)
                         REQUIRED_MORE_FUNDS -> mViewModel.onFundingSelected()
@@ -98,9 +100,14 @@ class RecordsFragment : Fragment(), Observer<PagedList<RecordEntity>>, Permissio
     }
 
     override fun onChanged(list: PagedList<RecordEntity>?) {
-        if (::mAdapter.isInitialized) {
-            mAdapter.submitList(list)
-            records_recycler_view.post { records_recycler_view.smoothScrollToPosition(0) }
+        records_recycler_view?.apply {
+            (adapter as? RecordsAdapter)?.apply {
+                val size = itemCount
+                submitList(list)
+                if (size < list?.size ?: return) post {
+                    records_recycler_view?.smoothScrollToPosition(list.size - 1)
+                }
+            }
         }
     }
 
@@ -174,6 +181,18 @@ class RecordsFragment : Fragment(), Observer<PagedList<RecordEntity>>, Permissio
             negativeLabel = R.string.record_audio_permission_permanently_denied_negative,
             positiveLabel = R.string.record_audio_permission_permanently_denied_positive,
             positive = { activity?.goAppSettings() }
+        )
+    }
+
+    private fun handleDeleteRecord(recordToDelete: RecordEntity?) {
+        if (recordToDelete == null) return
+        mViewModel.onDeleteRecordHandled()
+        val message = String.format(getString(R.string.delete_record_message), recordToDelete.fileName)
+        showDualSelectorDialog(
+            message = message,
+            negativeLabel = R.string.cancel,
+            positiveLabel = R.string.confirm,
+            positive = { mViewModel.onDeleteRecordConfirm(recordToDelete) }
         )
     }
 

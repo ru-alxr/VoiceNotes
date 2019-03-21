@@ -17,24 +17,31 @@
 
         <TextView
             style="@style/setting_label"
-            android:text="@string/native_language_setting" />
-
-        <Space
-            android:layout_width="match_parent"
-            android:layout_height="4dp" />
+            android:text="@string/account_details" />
 
         <TextView
-            android:id="@+id/setting_native_language"
-            style="@style/setting_value"
-            tools:text="@string/native_language_empty" />
-
-        <Space
-            android:layout_width="match_parent"
-            android:layout_height="4dp" />
+            android:id="@+id/account_display_name"
+            style="@style/immutable_setting_value"
+            tools:text="Aleksandr Koscheev" />
 
         <TextView
-            style="@style/setting_explanation"
-            android:text="@string/setting_native_language_explanation" />
+            android:id="@+id/account_provider"
+            style="@style/immutable_setting_value"
+            tools:text="Authorization provider: google.com" />
+
+        <TextView
+            android:id="@+id/account_email"
+            style="@style/immutable_setting_value"
+            tools:text="ru.alxr@google.com" />
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="@color/dialog_delimiter" />
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="2dp" />
 
         <View
             android:layout_width="match_parent"
@@ -47,24 +54,39 @@
 
         <TextView
             style="@style/setting_label"
-            android:text="@string/synchronization_status" />
-
-        <Space
-            android:layout_width="match_parent"
-            android:layout_height="4dp" />
+            android:text="@string/sign_out_application" />
 
         <TextView
-            android:id="@+id/setting_synchronization"
+            android:id="@+id/setting_sign_out"
             style="@style/setting_value"
-            tools:text="@string/synchronization_status_disabled" />
-
-        <Space
-            android:layout_width="match_parent"
-            android:layout_height="4dp" />
+            android:drawableEnd="@drawable/ic_logout_normal"
+            android:text="@string/perform_sign_out" />
 
         <TextView
             style="@style/setting_explanation"
-            android:text="@string/setting_synchronization_status_explanation" />
+            android:text="@string/all_local_files_will_be_erased" />
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="@color/dialog_delimiter" />
+
+        <Space
+            android:layout_width="match_parent"
+            android:layout_height="16dp" />
+
+        <TextView
+            style="@style/setting_label"
+            android:text="@string/native_language_setting" />
+
+        <TextView
+            android:id="@+id/setting_native_language"
+            style="@style/setting_value"
+            tools:text="@string/native_language_empty" />
+
+        <TextView
+            style="@style/setting_explanation"
+            android:text="@string/setting_native_language_explanation" />
 
         <View
             android:layout_width="match_parent"

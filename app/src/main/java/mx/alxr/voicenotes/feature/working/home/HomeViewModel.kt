@@ -32,9 +32,8 @@ class HomeViewModel(
             .observeOn(AndroidSchedulers.mainThread())
             .doOnNext {
                 it?.apply {
-                    mLiveModel.value = mLiveModel.value?.copy(language = languageName, languageCode = languageCode)
+                    mLiveModel.value = mLiveModel.value?.copy(languageCode = languageCode)
                 }
-
             }
             .subscribe()
     }
@@ -113,9 +112,7 @@ class HomeViewModel(
 }
 
 data class Model(
-    val language: String = "",
     val languageCode:String = "",
-    val isSynchronizationEnabled: Boolean = false,
     val isPointerOut: Boolean = false,
     val isRecordingInProgress: Boolean = false,
     val isStopRecordingRequested: Boolean = false

@@ -10,6 +10,7 @@ data class RecordEntity(
     val fileName: String,
     val date: Long,
     val crc32: Long,
+    val uniqueId: String,
     val duration: Long,
     val transcription: String = "",
     val isTranscribed: Boolean = false,
@@ -18,7 +19,8 @@ data class RecordEntity(
     val userId:String,
 
     val isFileUploaded:Boolean = false,
-    val isFileDownloaded:Boolean = false
+    val isFileDownloaded:Boolean = false,
+    val isDeleted:Boolean = false
 ) {
 
     fun getMap():Map<String, Any>{
@@ -31,19 +33,12 @@ data class RecordEntity(
             put("is_transcribed", isTranscribed)
             put("language_code", languageCode)
             put("user_id", userId)
+            put("unique_id", uniqueId)
         }
     }
 }
 
-fun Map<String, Any>.extractCrc32():Long{
-    return get("crc_32") as? Long?: -2
-}
-
-fun Map<String, Any>.extractFileName():String{
-    return get("file_name") as? String?: ""
-}
-
-data class RecordTag(val crc32: Long)
+data class RecordTag(val uniqueId: String)
 
 fun Map<String, Any?>.toRemoteObject(): RemoteRecord{
     return RemoteRecord(
@@ -54,6 +49,7 @@ fun Map<String, Any?>.toRemoteObject(): RemoteRecord{
         transcription = get("transcription")!!.toString(),
         isTranscribed = get("is_transcribed") as Boolean,
         languageCode = get("language_code")!!.toString(),
-        uid = get("user_id")!!.toString()
+        uid = get("user_id")!!.toString(),
+        uniqueId = get("unique_id")!!.toString()
     )
 }

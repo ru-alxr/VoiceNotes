@@ -10,6 +10,7 @@ import androidx.paging.PagedListAdapter
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import mx.alxr.voicenotes.R
+import mx.alxr.voicenotes.feature.player.TICK_PERIOD
 import mx.alxr.voicenotes.repository.record.RecordEntity
 import mx.alxr.voicenotes.utils.extensions.getPosition
 import mx.alxr.voicenotes.utils.logger.ILogger
@@ -21,9 +22,18 @@ import java.util.concurrent.TimeUnit
 class RecordsAdapter(
     @Suppress("unused") private val logger: ILogger,
     private val inflater: LayoutInflater,
-    private val callback: ICallback
+    private val callback: ICallback,
+    private val mMap: MutableMap<String, Int>
 ) :
     PagedListAdapter<RecordEntity, RecordsAdapter.RecordViewHolder>(DIFF_CALLBACK) {
+
+    init {
+        setHasStableIds(true)
+    }
+
+    override fun getItemId(position: Int): Long {
+        return getItem(position)?.date ?: - position.toLong()
+    }
 
     companion object {
         private val DIFF_CALLBACK = object :
@@ -41,7 +51,6 @@ class RecordsAdapter(
     }
 
     private var mState: PlaybackState = PlaybackState()
-    private val mMap: MutableMap<Long, Int> = HashMap()
 
     private val dateFormat = DateFormat
         .getDateTimeInstance(
@@ -53,8 +62,7 @@ class RecordsAdapter(
     fun setState(state: PlaybackState) {
         mState = state
         if (state.mpState == MediaPlayerState.Stopped) return
-        mMap[state.crc32] = state.progress
-        getPosition { position -> getItem(position)?.crc32 == state.crc32}
+        getPosition { position -> getItem(position)?.uniqueId == state.uniqueId}
             .apply {
                 if (invalid()) return
                 notifyItemChanged(this)
@@ -90,7 +98,8 @@ class RecordsAdapter(
         private val transcription: TextView = view.findViewById(R.id.transcription_view),
         private val recognize: ImageView = view.findViewById(R.id.recognize_voice_view),
         private val share: View = view.findViewById(R.id.share_record_view),
-        private val language: TextView = view.findViewById(R.id.language_view)
+        private val language: TextView = view.findViewById(R.id.language_view),
+        private val delete:View = view.findViewById(R.id.delete_record_view)
 
     ) : RecyclerView.ViewHolder(view), View.OnClickListener, SeekBar.OnSeekBarChangeListener {
 
@@ -100,29 +109,28 @@ class RecordsAdapter(
             recognize.setOnClickListener(this)
             share.setOnClickListener(this)
             language.setOnClickListener(this)
+            delete.setOnClickListener(this)
         }
 
         override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
             val entity = getItem(adapterPosition) ?: return
-            logger.with(this@RecordsAdapter).add("${entity.crc32} === $progress").log()
-            mMap[entity.crc32] = progress
+            logger.with(this@RecordsAdapter).add("${entity.uniqueId} === $progress").log()
+            mMap[entity.uniqueId] = progress
             if (progress == 0) {
                 setDuration(seek.max.toLong())
             } else {
                 setDuration(progress)
             }
-            if (!fromUser || mState.crc32 != entity.crc32) return
-            callback.onSeekBarChange(progress)
         }
 
         override fun onStartTrackingTouch(seekBar: SeekBar?) {
             val entity = getItem(adapterPosition) ?: return
-            if (mState.crc32 == entity.crc32) callback.onStartTrackingTouch()
+            if (mState.uniqueId == entity.uniqueId) callback.onStartTrackingTouch()
         }
 
         override fun onStopTrackingTouch(seekBar: SeekBar?) {
             val entity = getItem(adapterPosition) ?: return
-            if (mState.crc32 == entity.crc32) callback.onStopTrackingTouch()
+            if (mState.uniqueId == entity.uniqueId) callback.onStopTrackingTouch()
         }
 
         override fun onClick(v: View?) {
@@ -130,18 +138,18 @@ class RecordsAdapter(
             if (position.invalid()) return
             getItem(position)?.apply {
                 when (v) {
-                    play -> {
-                        callback.onPlayButtonClick(this, seek.progress)
-                    }
+                    play -> callback.onPlayButtonClick(this)
                     share -> callback.requestShare(this)
                     recognize -> callback.requestGetTranscription(this)
                     status -> callback.requestSynchronize(this)
                     language -> callback.requestLanguageChange(this)
+                    delete -> callback.requestDeleteRecord(this)
                 }
             }
         }
 
         fun bind(entity: RecordEntity) {
+            play.setImageResource(if (entity.isFileDownloaded) R.drawable.icon_pause_selector else R.drawable.ic_download_normal)
             seek.setOnSeekBarChangeListener(null)
             date.text = dateFormat.format(Date(entity.date))
             status.isEnabled = !entity.isSynchronized
@@ -150,17 +158,21 @@ class RecordsAdapter(
             } else {
                 transcription.text = null
             }
-            val checked = mState.crc32 == entity.crc32 && mState.isPlaying() && mState.progress < mState.duration
+            if (mMap[entity.uniqueId] == entity.duration.toInt()) {
+                mMap[entity.uniqueId] = 0
+            }
+            val progress = mMap[entity.uniqueId] ?: 0
+            val checked = mState.uniqueId == entity.uniqueId && mState.isPlaying() && progress < entity.duration
             play.isChecked = checked
             seek.max = entity.duration.toInt()
+            // This trick I have to use because mediaplayer has inaccuracy of MediaPlayer.seekTo(int) method
+            // as result it returns MediaPlayer.getCurrentPosition value less than was set in MediaPlayer.seekTo(int)
+            // and seek pointer moves back a little, it is confusing
+            val d = progress - seek.progress
+            if (d > 0 || d < - TICK_PERIOD) seek.progress = progress
             if (checked) {
-                seek.progress = mState.progress
-                setDuration(mState.progress)
+                setDuration(progress)
             } else {
-                if (mMap[entity.crc32] == entity.duration.toInt()) {
-                    mMap[entity.crc32] = 0
-                }
-                seek.progress = mMap[entity.crc32] ?: 0
                 setDuration(entity.duration)
             }
             transcription.visibility = if (entity.isTranscribed) View.VISIBLE else View.GONE

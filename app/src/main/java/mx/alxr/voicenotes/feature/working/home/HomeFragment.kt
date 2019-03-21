@@ -60,22 +60,6 @@ class HomeFragment : Fragment(), Observer<Model>, View.OnTouchListener, Permissi
 
     override fun onChanged(model: Model?) {
         if (model == null) return
-        synchronization_status_view
-            .apply {
-                isEnabled = model.isSynchronizationEnabled
-                text = if (model.isSynchronizationEnabled) {
-                    getString(R.string.synchronization_status_enabled)
-                } else {
-                    getString(R.string.synchronization_status_disabled)
-                }
-            }
-
-        native_language_view
-            .apply {
-                text = if (model.language.isEmpty()) getString(R.string.native_language_empty)
-                else format(R.string.native_language, model.language)
-            }
-
         cancel_recording_view.visibility = if (model.isPointerOut) View.VISIBLE else View.INVISIBLE
         hideCancelRecordingView(model.isRecordingInProgress)
         if (model.isStopRecordingRequested) {

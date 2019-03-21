@@ -41,39 +41,27 @@
 
             <ImageView
                 android:id="@+id/share_record_view"
-                android:layout_width="56dp"
-                android:layout_height="40dp"
-                android:layout_gravity="center_vertical"
-                android:paddingStart="16dp"
-                android:paddingTop="8dp"
-                android:paddingEnd="16dp"
-                android:paddingBottom="8dp"
+                style="@style/record_control_panel_item"
                 android:src="@drawable/ic_share_normal"
                 tools:ignore="ContentDescription" />
 
             <ImageView
                 android:id="@+id/recognize_voice_view"
-                android:layout_width="56dp"
-                android:layout_height="40dp"
-                android:layout_gravity="center_vertical"
-                android:paddingStart="16dp"
-                android:paddingTop="8dp"
-                android:paddingEnd="16dp"
-                android:paddingBottom="8dp"
+                style="@style/record_control_panel_item"
                 android:src="@drawable/ic_cloud_computing_2"
                 tools:ignore="ContentDescription" />
 
             <ImageView
                 android:id="@+id/synchronization_status_view"
-                android:layout_width="56dp"
-                android:layout_height="40dp"
-                android:layout_gravity="center_vertical"
-                android:paddingStart="16dp"
-                android:paddingTop="8dp"
-                android:paddingEnd="16dp"
-                android:paddingBottom="8dp"
+                style="@style/record_control_panel_item"
                 android:src="@drawable/ic_cloud_computing_synchronization_selector"
                 tools:ignore="ContentDescription" />
+
+            <ImageView
+                android:id="@+id/delete_record_view"
+                android:src="@drawable/ic_garbage_normal"
+                tools:ignore="ContentDescription"
+                style="@style/record_control_panel_item" />
 
         </LinearLayout>
 
@@ -97,8 +85,8 @@
 
         <mx.alxr.voicenotes.utils.widgets.CheckableImageView
             android:id="@+id/play_view"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_width="56dp"
+            android:layout_height="56dp"
             android:layout_centerVertical="true"
             android:padding="16dp"
             android:src="@drawable/icon_pause_selector"

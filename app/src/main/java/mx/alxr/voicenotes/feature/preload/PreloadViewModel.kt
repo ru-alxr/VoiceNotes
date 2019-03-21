@@ -80,7 +80,7 @@ class PreloadViewModel(
     private fun onPreloadSuccess(t: Unit) {
         mLiveModel.value?.apply {
             if (selectionFlag) {
-                if (tag is Long){
+                if (tag is String){
                     navigation.navigateFeature(FEATURE_SELECT_NATIVE_LANGUAGE, RecordTag(tag))
                 }else{
                     navigation.navigateFeature(FEATURE_SELECT_NATIVE_LANGUAGE, true)

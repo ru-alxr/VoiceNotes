@@ -18,4 +18,6 @@ interface IUserRepository {
     fun setNativeLanguageExplicitlyAsked(): Single<Unit>
     fun setRestoreRecordsPerformed(): Single<Unit>
 
+    fun signOut():Single<Unit>
+
 }

@@ -35,7 +35,7 @@ class Recorder(private val context: Context) : IRecorder {
             try {
                 stop()
             } catch (e: Exception) {
-                e.printStackTrace()
+                //e.printStackTrace()
             }
             release()
         }
@@ -63,7 +63,7 @@ class Recorder(private val context: Context) : IRecorder {
             sharingIntent.putExtra(Intent.EXTRA_STREAM, getRecordUri())
             context.startActivity(Intent.createChooser(sharingIntent, "SHARE VIA..."))
         } catch (e: Exception) {
-            e.printStackTrace()
+            //e.printStackTrace()
         }
     }
 }

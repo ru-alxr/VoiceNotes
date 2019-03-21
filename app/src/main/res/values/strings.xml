@@ -95,5 +95,14 @@
 
     <string name="error_file_download">Error file download</string>
     <string name="remote_storage_error">File was removed</string>
+    <string name="sign_out_application">Sign out application</string>
+    <string name="perform_sign_out">Perform sign out</string>
+    <string name="all_local_files_will_be_erased">All local files will be erased.\nFiles on remote cloud are in safe</string>
+
+    <string name="sign_out_dialog_message_with_permission">Application will perform Sign out. Cached audio files will be removed</string>
+    <string name="sign_out_dialog_message_without_permission">Application will perform Sign out. Cached audio files will not be removed</string>
+    <string name="auth_provider_format">Authorization provider: %s</string>
+    <string name="account_details">Account details</string>
+    <string name="delete_record_message">Delete record %s?</string>
 
 </resources>
