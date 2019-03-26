@@ -11,6 +11,8 @@ interface IRecordsRepository {
 
     fun insert(record: AudioFile): Single<Unit>
 
+    fun getCurrent(record: RecordEntity):Single<RecordEntity>
+
     fun setLanguage(uniqueId: String, entity: LanguageEntity): Single<Unit>
 
     fun getAll(isSynchronized:Boolean): Flowable<List<RecordEntity>>

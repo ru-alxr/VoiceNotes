@@ -39,7 +39,9 @@ class RecordsRepository(
                     languageCode = record.language,
                     userId = it.firebaseUserId,
                     isFileDownloaded = true,
-                    uniqueId = record.uniqueId
+                    uniqueId = record.uniqueId,
+                    sampleRateHertz = record.sampleRateHertz,
+                    encoding = record.encoding
                 )
                 dao.insert(entity)
                 logger.with(this).add("Insert $record").log()
@@ -81,4 +83,7 @@ class RecordsRepository(
         } ?: logger.with(this@RecordsRepository).add("no local record $uniqueId, nothing to delete").log()
     }
 
+    override fun getCurrent(record: RecordEntity): Single<RecordEntity> {
+        return Single.fromCallable { dao.getRecord(record.uniqueId) }
+    }
 }

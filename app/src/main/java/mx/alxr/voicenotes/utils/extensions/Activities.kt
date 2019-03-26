@@ -106,18 +106,19 @@ fun Activity.extractAssetsFile(filePath: String): String {
 }
 
 fun Activity.offer(args: TranscriptionArgs, positive: (TranscriptionArgs) -> Unit) {
+    val entity = args.entity ?: return
     AlertDialog
         .Builder(this)
         .setView(R.layout.dialog_confirm_recognition_arguments)
         .show()
         .apply {
             findViewById<TextView>(R.id.file_name_view)?.apply {
-                text = args.fileAbsolutePath
+                text = entity.fileName
             }
 
             findViewById<TextView>(R.id.duration_view)?.apply {
-                val minutes = TimeUnit.MILLISECONDS.toMinutes(args.durationMillis)
-                val seconds = TimeUnit.MILLISECONDS.toSeconds(args.durationMillis + 500L) - TimeUnit.MINUTES.toSeconds(minutes)
+                val minutes = TimeUnit.MILLISECONDS.toMinutes(entity.duration)
+                val seconds = TimeUnit.MILLISECONDS.toSeconds(entity.duration + 500L) - TimeUnit.MINUTES.toSeconds(minutes)
                 text = String.format("%d:%02d", minutes, seconds)
             }
 

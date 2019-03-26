@@ -99,7 +99,8 @@ class RecordsAdapter(
         private val recognize: ImageView = view.findViewById(R.id.recognize_voice_view),
         private val share: View = view.findViewById(R.id.share_record_view),
         private val language: TextView = view.findViewById(R.id.language_view),
-        private val delete:View = view.findViewById(R.id.delete_record_view)
+        private val delete:View = view.findViewById(R.id.delete_record_view),
+        private val progressView:View = view.findViewById(R.id.recognition_progress)
 
     ) : RecyclerView.ViewHolder(view), View.OnClickListener, SeekBar.OnSeekBarChangeListener {
 
@@ -176,11 +177,11 @@ class RecordsAdapter(
                 setDuration(entity.duration)
             }
             transcription.visibility = if (entity.isTranscribed) View.VISIBLE else View.GONE
-            recognize.visibility = if (entity.isTranscribed) View.INVISIBLE else View.VISIBLE
             language.text = entity.languageCode.replace("-", " | ")
             if (mState.mpState == MediaPlayerState.Stopping) callback.onStopped()
             if (mState.mpState == MediaPlayerState.Pausing) callback.onPaused()
             seek.setOnSeekBarChangeListener(this@RecordViewHolder)
+            progressView.visibility = if (entity.isRecognizeInProgress) View.VISIBLE else View.INVISIBLE
         }
 
         private fun setDuration(d: Number) {

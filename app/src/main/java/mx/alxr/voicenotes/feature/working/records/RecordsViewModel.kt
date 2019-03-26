@@ -19,7 +19,6 @@ import mx.alxr.voicenotes.feature.synchronizer.ISynchronizer
 import mx.alxr.voicenotes.repository.record.IRecordsRepository
 import mx.alxr.voicenotes.repository.record.RecordEntity
 import mx.alxr.voicenotes.repository.record.RecordTag
-import mx.alxr.voicenotes.repository.record.RecordsRepository
 import mx.alxr.voicenotes.utils.errors.ErrorSolution
 import mx.alxr.voicenotes.utils.errors.IErrorMessageResolver
 import mx.alxr.voicenotes.utils.errors.Interaction
@@ -45,6 +44,7 @@ class RecordsViewModel(
     private var mFeatureDisposable: Disposable? = null
 
     private val deleteEntryMap: MutableMap<String, Disposable> = HashMap()
+    private val recognizeMap: MutableMap<String, Disposable> = HashMap()
 
     init {
         mLiveModel.value = Model()
@@ -106,6 +106,8 @@ class RecordsViewModel(
         player.setPlayback(null)
         for (key in deleteEntryMap.keys) deleteEntryMap[key]?.dispose()
         deleteEntryMap.clear()
+        for (key in recognizeMap.keys) recognizeMap[key]?.dispose()
+        recognizeMap.clear()
         super.onCleared()
     }
 
@@ -215,6 +217,25 @@ class RecordsViewModel(
 
     fun onRecognitionAccepted(args: TranscriptionArgs) {
         logger.with(this).add("onRecognitionAccepted").log()
+        val entity:RecordEntity = args.entity ?:return
+        var disposable:Disposable? = recognizeMap[entity.uniqueId]
+        if (disposable != null) return
+        disposable = recognizer
+            .recognize(args)
+            .subscribeOn(Schedulers.io())
+            .doOnDispose {
+                recognizeMap.remove(entity.uniqueId)
+            }
+            .subscribeWith(SingleDisposable<Unit>(
+                success = {
+                    recognizeMap.remove(entity.uniqueId)
+                },
+                error = {
+
+                    recognizeMap.remove(entity.uniqueId)
+                }
+            ))
+        recognizeMap[entity.uniqueId] = disposable
     }
 
     private fun onPrepareRecognitionError(entity: RecordEntity, throwable: Throwable) {
@@ -269,6 +290,9 @@ class RecordsViewModel(
         disposable = recordsRepository
             .markDeleted(entity)
             .subscribeOn(Schedulers.io())
+            .doOnDispose {
+                deleteEntryMap.remove(entity.uniqueId)
+            }
             .subscribeWith(SingleDisposable<Unit>(
                 success = {
                     deleteEntryMap.remove(entity.uniqueId)

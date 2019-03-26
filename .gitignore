@@ -86,3 +86,4 @@ build/
 api_key.txt
 
 google-services.json
+credential.json

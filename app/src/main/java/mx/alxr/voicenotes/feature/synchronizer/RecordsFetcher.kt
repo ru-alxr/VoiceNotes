@@ -50,10 +50,14 @@ class RecordsFetcher(
                                     userId = uid,
                                     isFileUploaded = true,
                                     isFileDownloaded = false,
-                                    uniqueId = uniqueId
+                                    uniqueId = uniqueId,
+                                    encoding = encoding,
+                                    sampleRateHertz = sampleRateHertz,
+                                    remoteFileUri = remoteFileUri
                                 )
                                 count++
                                 recordsDao.insert(entity)
+                                logger.with(this@RecordsFetcher).add("FETCHED $entity").log()
                             }
                         }
                         emitter.onSuccess(count)

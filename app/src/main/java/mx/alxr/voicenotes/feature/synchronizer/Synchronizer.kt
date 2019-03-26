@@ -13,6 +13,9 @@ import io.reactivex.SingleEmitter
 import io.reactivex.disposables.Disposable
 import io.reactivex.schedulers.Schedulers
 import mx.alxr.voicenotes.R
+import mx.alxr.voicenotes.feature.recorder.CONTENT_TYPE
+import mx.alxr.voicenotes.feature.recorder.OUTPUT_ENCODER_NAME
+import mx.alxr.voicenotes.feature.recorder.SAMPLING_RATE
 import mx.alxr.voicenotes.repository.record.DIRECTORY_NAME
 import mx.alxr.voicenotes.repository.record.IRecordsRepository
 import mx.alxr.voicenotes.repository.record.RecordEntity
@@ -68,7 +71,7 @@ class Synchronizer(
         mPerformDisposable?.dispose()
     }
 
-    override fun fetchFile(entity: RecordEntity): Single<File> {
+    private fun fetchFile(entity: RecordEntity): Single<File> {
         return Single
             .create { emitter: SingleEmitter<File> -> performDownload(entity, emitter) }
     }
@@ -145,7 +148,10 @@ class Synchronizer(
                         userId = uid,
                         isFileUploaded = true,
                         isFileDownloaded = localFile.exists(),
-                        uniqueId = uniqueId
+                        uniqueId = uniqueId,
+                        encoding = encoding,
+                        sampleRateHertz = sampleRateHertz,
+                        remoteFileUri = remoteFileUri
                     )
                     logger.with(this@Synchronizer).add("performWith: doOnSuccess ${entity.fileName}").log()
                     recordsRepository.insert(entity)
@@ -195,7 +201,7 @@ class Synchronizer(
         val executor = Executors.newSingleThreadExecutor()
         val metadata = StorageMetadata
             .Builder()
-            .setContentType("audio/aac")
+            .setContentType(CONTENT_TYPE)
             .build()
         fileReference
             .putFile(localFileUri, metadata)
@@ -227,7 +233,29 @@ class Synchronizer(
             )
             return
         }
-        recordsRepository.insert(entity.copy(isFileUploaded = true))
+        val metadata: StorageMetadata? = fileSnapshot.metadata
+        if (metadata == null) {
+            onFailure(
+                emitter,
+                RuntimeException("No metadata for ${entity.fileName}")
+            )
+            return
+        }
+        val reference: StorageReference? = metadata.reference
+        if (reference == null) {
+            onFailure(
+                emitter,
+                RuntimeException("No reference for ${entity.fileName}")
+            )
+            return
+        }
+        logger.with(this).add("onFileUploadSuccess $reference").log()
+        recordsRepository.insert(
+            entity.copy(
+                isFileUploaded = true,
+                remoteFileUri = reference.toString()
+            )
+        )
         onPostFileUploadSuccess(entity, emitter)
     }
 
@@ -248,6 +276,7 @@ class Synchronizer(
                         }
                         updateRemoteRecord(entity, emitter)
                     } catch (e: Exception) {
+                        //todo: implement stack trace logger with ILogger!!!
                         e.printStackTrace()
                         onFailure(emitter, NullPointerException("No record"))
                     }
@@ -388,7 +417,9 @@ class Synchronizer(
                     duration = durationLong,
                     date = createdAt,
                     language = languageCode,
-                    uniqueId = UUID.randomUUID().toString()
+                    uniqueId = UUID.randomUUID().toString(),
+                    encoding = OUTPUT_ENCODER_NAME,
+                    sampleRateHertz = SAMPLING_RATE
                 )
             }
             .flatMap { recordsRepository.insert(it) }
@@ -401,6 +432,7 @@ class Synchronizer(
                 if (it) {
                     val directory = getDirectory()
                     val target = File(directory, entity.fileName)
+                    if (!entity.isFileDownloaded) recordsRepository.insert(entity.copy(isFileDownloaded = true))
                     Single.just(target)
                 } else {
                     fetchFile(entity)
@@ -482,7 +514,9 @@ class Synchronizer(
                         uniqueId = uniqueId,
                         uid = userId,
                         languageCode = languageCode,
-                        delete = true
+                        delete = true,
+                        encoding = encoding,
+                        sampleRateHertz = sampleRateHertz
                     )
                     emitter.onSuccess(remoteStub)
                 }
@@ -508,7 +542,9 @@ class Synchronizer(
                                 uniqueId = uniqueId,
                                 uid = userId,
                                 languageCode = languageCode,
-                                delete = true
+                                delete = true,
+                                sampleRateHertz = sampleRateHertz,
+                                encoding = encoding
                             )
                             emitter.onSuccess(remoteStub)
                         }
@@ -534,7 +570,10 @@ data class RemoteRecord(
     val languageCode: String,
     val uid: String,
     val uniqueId: String,
-    val delete: Boolean = false
+    val delete: Boolean = false,
+    val encoding: String,
+    val sampleRateHertz: Long,
+    val remoteFileUri:String = ""
 )
 
 /**
@@ -546,5 +585,7 @@ data class AudioFile(
     val duration: Long,
     val date: Long,
     val language: String,
-    val uniqueId: String
+    val uniqueId: String,
+    val encoding: String,
+    val sampleRateHertz: Long
 )

@@ -7,4 +7,6 @@ interface IRecognizer {
 
     fun prepareArgs(entity:RecordEntity):Single<TranscriptionArgs>
 
+    fun recognize(args:TranscriptionArgs):Single<Unit>
+
 }

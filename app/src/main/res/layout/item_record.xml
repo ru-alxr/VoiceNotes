@@ -45,11 +45,23 @@
                 android:src="@drawable/ic_share_normal"
                 tools:ignore="ContentDescription" />
 
-            <ImageView
-                android:id="@+id/recognize_voice_view"
-                style="@style/record_control_panel_item"
-                android:src="@drawable/ic_cloud_computing_2"
-                tools:ignore="ContentDescription" />
+            <RelativeLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content">
+
+                <ImageView
+                    android:id="@+id/recognize_voice_view"
+                    style="@style/record_control_panel_item"
+                    android:src="@drawable/ic_cloud_computing_2"
+                    tools:ignore="ContentDescription" />
+
+                <ProgressBar
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:indeterminate="true"
+                    android:id="@+id/recognition_progress"/>
+
+            </RelativeLayout>
 
             <ImageView
                 android:id="@+id/synchronization_status_view"

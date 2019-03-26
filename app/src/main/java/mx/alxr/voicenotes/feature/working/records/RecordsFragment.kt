@@ -73,7 +73,7 @@ class RecordsFragment : Fragment(), Observer<PagedList<RecordEntity>>, Permissio
     }
 
     private fun handleRecognition(args: TranscriptionArgs) {
-        if (args.fileAbsolutePath.isEmpty()) return
+        if (args.entity == null) return
         mViewModel.onRecognitionArgsHandled()
         activity?.offer(args) { mViewModel.onRecognitionAccepted(it) }
     }

@@ -12,6 +12,8 @@ android {
         versionCode 1
         versionName "1.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+
+        buildConfigField "String", "SPEECH_RECOGNITION_API_V1_ENDPOINT", '"https://speech.googleapis.com/v1/"'
     }
     signingConfigs {
         configDebug {
@@ -83,11 +85,11 @@ dependencies {
     implementation "com.squareup.retrofit2:converter-gson:$retrofit_version"
 
     //NAVIGATION
-    def navigation_version = '1.0.0-rc02'
+    def navigation_version = '1.0.0'
     implementation "android.arch.navigation:navigation-fragment:$navigation_version"
 
     //Remote config
-    implementation 'com.google.firebase:firebase-core:16.0.7'
+    implementation 'com.google.firebase:firebase-core:16.0.8'
     implementation 'com.google.firebase:firebase-config:16.4.0'
 
     //Paging library
@@ -105,6 +107,16 @@ dependencies {
 
     // Remote Storage
     implementation 'com.google.firebase:firebase-storage:16.1.0'
+
+    // OAuth2 for Google API
+    implementation('com.google.auth:google-auth-library-oauth2-http:0.7.0') {
+        exclude module: 'httpclient'
+    }
+
+    // Moshi: Gson replacement
+    def moshiVersion = '1.8.0'
+    implementation("com.squareup.moshi:moshi-kotlin:$moshiVersion")
+    kapt("com.squareup.moshi:moshi-kotlin-codegen:$moshiVersion")
 }
 
 apply plugin: 'com.google.gms.google-services'

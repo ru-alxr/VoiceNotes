@@ -21,7 +21,7 @@ class Recorder(private val context: Context) : IRecorder {
         mediaRecorder.setOutputFormat(OUTPUT_FORMAT)
         mediaRecorder.setAudioEncoder(OUTPUT_ENCODER)
         mediaRecorder.setAudioEncodingBitRate(ENCODING_BITRATE)
-        mediaRecorder.setAudioSamplingRate(SAMPLING_RATE)
+        mediaRecorder.setAudioSamplingRate(SAMPLING_RATE.toInt())
         mediaRecorder.setAudioChannels(AUDIO_CHANNELS)
         mediaRecorder.setOutputFile(file.absolutePath)
         mediaRecorder.prepare()

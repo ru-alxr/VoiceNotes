@@ -14,8 +14,6 @@ interface ISynchronizer {
 
     fun onStop()
 
-    fun fetchFile(entity: RecordEntity): Single<File>
-
     fun storeFile(file: File, languageCode:String): Single<Unit>
 
     fun getFile(entity: RecordEntity):Single<File>

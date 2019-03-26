@@ -1,8 +1,7 @@
 package mx.alxr.voicenotes.feature.recognizer
 
-data class TranscriptionArgs(val fileAbsolutePath:String = "",
-                             val languageCode:String = "",
-                             val languageName:String = "",
-                             val durationMillis:Long = 0,
+import mx.alxr.voicenotes.repository.record.RecordEntity
+
+data class TranscriptionArgs(val entity: RecordEntity? = null,
                              val requiredCoins:Int = 0,
                              val availableCoins:Int = -1)
