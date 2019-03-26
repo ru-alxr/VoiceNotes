@@ -13,4 +13,9 @@ interface IConfigRepository {
 
     fun getServiceCredentials():Single<String>
 
+    /**
+     * Coins amount user received on registration
+     */
+    fun getInitialCoinsAmount():Single<Long>
+
 }

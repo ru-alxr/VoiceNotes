@@ -85,13 +85,17 @@ class RecordsFragment : Fragment(), Observer<PagedList<RecordEntity>>, Permissio
             Interaction.Snack -> activity?.shackBar(solution.message)
             Interaction.Alert -> {
                 logger.with(this).add("handleError $solution").log()
-                activity?.alertRequiredData(
-                    solution.message
-                ) {
-                    when (solution.resolutionRequired) {
-                        REQUIRED_USER_REGISTRATION -> mViewModel.onRegistrationSelected()
-                        REQUIRED_RECORD_LANGUAGE_CODE -> mViewModel.onLanguageSelectorSelected(solution.details)
-                        REQUIRED_MORE_FUNDS -> mViewModel.onFundingSelected()
+                if (solution.resolutionRequired.isEmpty()){
+                    activity?.information(solution.message) {}
+                }else{
+                    activity?.alertRequiredData(
+                        solution.message
+                    ) {
+                        when (solution.resolutionRequired) {
+                            REQUIRED_USER_REGISTRATION -> mViewModel.onRegistrationSelected()
+                            REQUIRED_RECORD_LANGUAGE_CODE -> mViewModel.onLanguageSelectorSelected(solution.details)
+                            REQUIRED_MORE_FUNDS -> mViewModel.onFundingSelected()
+                        }
                     }
                 }
             }

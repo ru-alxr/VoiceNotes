@@ -15,6 +15,7 @@ import mx.alxr.voicenotes.feature.IFeatureNavigation
 import mx.alxr.voicenotes.repository.remote.firebaseuser.IRemoteUserRepository
 import mx.alxr.voicenotes.repository.user.IUserRepository
 import mx.alxr.voicenotes.repository.user.UserEntity
+import mx.alxr.voicenotes.repository.wallet.IWalletRepository
 import mx.alxr.voicenotes.utils.errors.ErrorSolution
 import mx.alxr.voicenotes.utils.errors.IErrorMessageResolver
 import mx.alxr.voicenotes.utils.errors.Interaction
@@ -26,6 +27,7 @@ class AuthViewModel(
     private val userRepository: IUserRepository,
     private val errorResolver: IErrorMessageResolver,
     private val remoteUserRepository: IRemoteUserRepository,
+    private val wallet: IWalletRepository,
     @Suppress("unused") private val mLogger: ILogger
 ) : ViewModel() {
 
@@ -46,13 +48,14 @@ class AuthViewModel(
             .getUser(extract)
             .observeOn(Schedulers.io())
             .flatMap { userRepository.update(it) }
+            .flatMap { wallet.newbiePromotion(isNewUser, it) } // todo move to backend ASAP
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .subscribeWith(SingleDisposable<UserEntity>(
                 success = {
                     if (isNewUser) {
                         navigation.navigateFeature(FEATURE_PRELOAD)
-                    }else{
+                    } else {
                         navigation.navigateFeature(FEATURE_LOAD_RECORDS)
                     }
                 },

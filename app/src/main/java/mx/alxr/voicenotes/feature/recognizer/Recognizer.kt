@@ -14,6 +14,8 @@ import mx.alxr.voicenotes.repository.wallet.IWalletRepository
 import mx.alxr.voicenotes.utils.errors.ProjectException
 import mx.alxr.voicenotes.utils.logger.ILogger
 import okhttp3.*
+import java.lang.StringBuilder
+import java.util.concurrent.TimeUnit
 
 class Recognizer(
     private val userRepository: IUserRepository,
@@ -88,15 +90,28 @@ class Recognizer(
     }
 
     private fun extractResult(source: SynchronousRecognizeResult): String {
-        val re = source.results ?: return ""
-        val su = re.firstOrNull() ?: return ""
-        val lt = su.alternatives ?: return ""
-        val result = lt.firstOrNull() ?: return ""
-        return result.transcript
+        val results = source.results ?: return ""
+        val builder = StringBuilder()
+        for (result in results){
+            result.alternatives?.apply {
+                builder.append(firstOrNull()?.transcript ?: "")
+            }
+        }
+        return builder.toString()
     }
 
     private fun recognizeAsynchronous(args: TranscriptionArgs): Single<Unit> {
-        return Single.fromCallable { throw ProjectException(R.string.error_feature_under_construction) }
+        val duration = args.entity?.duration?.getDuration()
+        return Single.fromCallable { throw ProjectException(
+            messageId = R.string.error_feature_under_construction_long_duration,
+            args = duration)
+        }
+    }
+
+    private fun Long.getDuration():String {
+        val minutes = TimeUnit.MILLISECONDS.toMinutes(this)
+        val seconds = TimeUnit.MILLISECONDS.toSeconds(this + 500L) - TimeUnit.MINUTES.toSeconds(minutes)
+        return String.format("%d:%02d", minutes, seconds)
     }
 
     private fun createBody(args: TranscriptionArgs): RequestBody {

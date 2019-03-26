@@ -107,6 +107,6 @@
     <string name="account_details">Account details</string>
     <string name="delete_record_message">Delete record %s?</string>
 
-    <string name="error_feature_under_construction">This feature is under construction</string>
+    <string name="error_feature_under_construction_long_duration">This feature is under construction: decoding long duration audio file (60 seconds and longer). Your file is %s long</string>
 
 </resources>

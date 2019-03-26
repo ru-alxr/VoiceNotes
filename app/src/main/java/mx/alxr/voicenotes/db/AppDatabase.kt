@@ -11,8 +11,9 @@ import mx.alxr.voicenotes.repository.record.RecordDAO
 import mx.alxr.voicenotes.repository.record.RecordEntity
 import mx.alxr.voicenotes.repository.user.UserDAO
 import mx.alxr.voicenotes.repository.user.UserEntity
+import mx.alxr.voicenotes.repository.wallet.TransactionDetails
 
-@Database(entities = [RecordEntity::class, UserEntity::class, LanguageEntity::class], version = 1)
+@Database(entities = [RecordEntity::class, UserEntity::class, LanguageEntity::class, TransactionDetails::class], version = 1)
 abstract class AppDatabase : RoomDatabase() {
 
     abstract fun recordDataDAO(): RecordDAO

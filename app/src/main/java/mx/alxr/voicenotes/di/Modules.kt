@@ -27,7 +27,8 @@ val FEATURE_AUTH = module {
             mLogger = get(),
             errorResolver = get(),
             userRepository = get(),
-            remoteUserRepository = get()
+            remoteUserRepository = get(),
+            wallet = get()
         )
     }
 

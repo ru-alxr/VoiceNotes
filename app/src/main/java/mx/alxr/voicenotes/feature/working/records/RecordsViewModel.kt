@@ -226,13 +226,15 @@ class RecordsViewModel(
             .doOnDispose {
                 recognizeMap.remove(entity.uniqueId)
             }
+            .observeOn(AndroidSchedulers.mainThread())
             .subscribeWith(SingleDisposable<Unit>(
                 success = {
                     recognizeMap.remove(entity.uniqueId)
                 },
                 error = {
-
                     recognizeMap.remove(entity.uniqueId)
+                    val model = mLiveModel.value ?: return@SingleDisposable
+                    mLiveModel.value = model.copy(solution = resolver.resolve(it, Interaction.Alert))
                 }
             ))
         recognizeMap[entity.uniqueId] = disposable
