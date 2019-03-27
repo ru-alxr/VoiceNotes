@@ -63,6 +63,13 @@ class RecordsFragment : Fragment(), Observer<PagedList<RecordEntity>>, Permissio
         handleRecognition(model.args)
         handlePermissionRequest(model)
         handleDeleteRecord(model.recordToDelete)
+        handleInfoMessage(model.infoMessage)
+    }
+
+    private fun handleInfoMessage(infoMessage: String) {
+        if (infoMessage.isEmpty()) return
+        mViewModel.onInfoMessageHandled()
+        activity?.information(infoMessage) {}
     }
 
     private fun handlePermissionRequest(model: Model) {
@@ -85,14 +92,18 @@ class RecordsFragment : Fragment(), Observer<PagedList<RecordEntity>>, Permissio
             Interaction.Snack -> activity?.shackBar(solution.message)
             Interaction.Alert -> {
                 logger.with(this).add("handleError $solution").log()
-                if (solution.resolutionRequired.isEmpty()){
+                if (solution.resolutionRequired.isEmpty()) {
                     activity?.information(solution.message) {}
-                }else{
+                } else {
+                    val positive:Int = when(solution.resolutionRequired){
+                        REQUIRED_MORE_FUNDS -> R.string.purchase_coins
+                        else -> android.R.string.ok
+                    }
                     activity?.alertRequiredData(
-                        solution.message
+                        solution.message,
+                        positive = positive
                     ) {
                         when (solution.resolutionRequired) {
-                            REQUIRED_USER_REGISTRATION -> mViewModel.onRegistrationSelected()
                             REQUIRED_RECORD_LANGUAGE_CODE -> mViewModel.onLanguageSelectorSelected(solution.details)
                             REQUIRED_MORE_FUNDS -> mViewModel.onFundingSelected()
                         }

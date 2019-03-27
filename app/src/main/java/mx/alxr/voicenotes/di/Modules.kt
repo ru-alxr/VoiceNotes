@@ -69,6 +69,7 @@ val FEATURE_LANGUAGE_SELECTOR = module {
             errorMessageResolver = get(),
             recordsRepository = get(),
             logger = get()
+
         )
     }
 
@@ -94,7 +95,8 @@ val MAIN_VIEW_MODULE = module {
             recognizer = get(),
             navigation = get(),
             map = HashMap(),
-            recordsRepository = get()
+            recordsRepository = get(),
+            promoter = get()
         )
     }
 

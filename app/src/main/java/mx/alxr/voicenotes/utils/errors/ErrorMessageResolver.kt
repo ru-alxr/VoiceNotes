@@ -38,7 +38,10 @@ class ErrorMessageResolver(val resources: IStringResources) : IErrorMessageResol
             is java.net.SocketTimeoutException -> resources.getString(R.string.no_network_error)
             is ProjectException -> {
                 throwable.args?.let {
-                    String.format(resources.getString(throwable.messageId), throwable.args)
+                    when(throwable.args){
+                        is Array<*> -> String.format(resources.getString(throwable.messageId), *throwable.args)
+                        else -> String.format(resources.getString(throwable.messageId), throwable.args)
+                    }
                 } ?: resources.getString(throwable.messageId)
             }
             is FirebaseFirestoreException -> resources.getString(R.string.no_network_error)
@@ -53,9 +56,11 @@ class ErrorMessageResolver(val resources: IStringResources) : IErrorMessageResol
     private fun resolveRequiredData(throwable: Throwable): String {
         return if (throwable is ProjectException) {
             when (throwable.messageId) {
-                R.string.error_no_funds -> REQUIRED_MORE_FUNDS
+                R.string.error_absolutely_no_funds-> REQUIRED_MORE_FUNDS
+                R.string.error_not_enough_funds -> REQUIRED_MORE_FUNDS
+                R.string.error_absolutely_no_funds_one_coin_required -> REQUIRED_MORE_FUNDS
+                
                 R.string.error_record_language_required -> REQUIRED_RECORD_LANGUAGE_CODE
-                R.string.error_registration_required -> REQUIRED_USER_REGISTRATION
                 else -> ""
             }
         } else {

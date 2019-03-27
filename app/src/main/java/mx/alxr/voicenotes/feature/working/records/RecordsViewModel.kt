@@ -13,6 +13,7 @@ import mx.alxr.voicenotes.feature.FEATURE_PRELOAD
 import mx.alxr.voicenotes.feature.IFeatureNavigation
 import mx.alxr.voicenotes.feature.player.IPlayback
 import mx.alxr.voicenotes.feature.player.IPlayer
+import mx.alxr.voicenotes.feature.promo.IPromoter
 import mx.alxr.voicenotes.feature.recognizer.IRecognizer
 import mx.alxr.voicenotes.feature.recognizer.TranscriptionArgs
 import mx.alxr.voicenotes.feature.synchronizer.ISynchronizer
@@ -35,6 +36,7 @@ class RecordsViewModel(
     private val recognizer: IRecognizer,
     private val navigation: IFeatureNavigation,
     private val recordsRepository: IRecordsRepository,
+    private val promoter: IPromoter,
     val map: MutableMap<String, Int>
 ) : ViewModel(), ICallback, IPlayback {
 
@@ -217,8 +219,8 @@ class RecordsViewModel(
 
     fun onRecognitionAccepted(args: TranscriptionArgs) {
         logger.with(this).add("onRecognitionAccepted").log()
-        val entity:RecordEntity = args.entity ?:return
-        var disposable:Disposable? = recognizeMap[entity.uniqueId]
+        val entity: RecordEntity = args.entity ?: return
+        var disposable: Disposable? = recognizeMap[entity.uniqueId]
         if (disposable != null) return
         disposable = recognizer
             .recognize(args)
@@ -255,16 +257,32 @@ class RecordsViewModel(
         mLiveModel.value = model.copy(share = Share())
     }
 
-    fun onRegistrationSelected() {
-
-    }
-
     fun onLanguageSelectorSelected(details: Any) {
-
+        // Если при регистарции не был задан дефолтный язык,
+        // то запрос на декодирование не может быть выполнен,
+        // пока хотя бы для записи не определен язык
     }
+
+    private var mFundingDisposable: Disposable? = null
 
     fun onFundingSelected() {
-
+        mFundingDisposable?.dispose()
+        mFundingDisposable = promoter
+            .promoteRequest()
+            .subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribeWith(SingleDisposable<String>(
+                success = {
+                    logger.with(this@RecordsViewModel).add("onFundingSelected success $it").log()
+                    val model = mLiveModel.value ?: return@SingleDisposable
+                    mLiveModel.value = model.copy(infoMessage = it)
+                },
+                error = {
+                    logger.with(this@RecordsViewModel).add("onFundingSelected error $it").log()
+                    val model = mLiveModel.value ?: return@SingleDisposable
+                    mLiveModel.value = model.copy(solution = resolver.resolve(it, Interaction.Snack))
+                }
+            ))
     }
 
     override fun requestDeleteRecord(recordEntity: RecordEntity) {
@@ -287,7 +305,7 @@ class RecordsViewModel(
     }
 
     fun onDeleteRecordConfirm(entity: RecordEntity) {
-        var disposable:Disposable? = deleteEntryMap[entity.uniqueId]
+        var disposable: Disposable? = deleteEntryMap[entity.uniqueId]
         if (disposable != null) return
         disposable = recordsRepository
             .markDeleted(entity)
@@ -306,6 +324,11 @@ class RecordsViewModel(
         deleteEntryMap[entity.uniqueId] = disposable
     }
 
+    fun onInfoMessageHandled() {
+        val model = mLiveModel.value ?: return
+        mLiveModel.value = model.copy(infoMessage = "")
+    }
+
 }
 
 data class Model(
@@ -316,7 +339,8 @@ data class Model(
     val requestPermissionSdCard: Boolean = false,
     val recordToPlay: RecordEntity? = null,
     val progressUpdate: Boolean = false,
-    val recordToDelete: RecordEntity? = null
+    val recordToDelete: RecordEntity? = null,
+    val infoMessage: String = ""
 )
 
 data class Share(

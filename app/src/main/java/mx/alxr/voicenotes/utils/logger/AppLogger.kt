@@ -38,6 +38,9 @@ class AppLogger(private val enabled: Boolean) : ILogger, org.koin.log.Logger {
             return this
         }
 
+        override fun e(throwable: Throwable) {
+
+        }
     }
 
     class DebugBuilder(source: Any) : ILogger.Builder {
@@ -65,6 +68,16 @@ class AppLogger(private val enabled: Boolean) : ILogger, org.koin.log.Logger {
                 "DEBUG_LOG",
                 stringBuilder.toString()
             )
+        }
+
+        override fun e(throwable: Throwable) {
+            stringBuilder.append(throwable.localizedMessage)
+            stringBuilder.append("; ")
+            Log.d(
+                "DEBUG_LOG",
+                stringBuilder.toString()
+            )
+            throwable.printStackTrace()
         }
     }
 

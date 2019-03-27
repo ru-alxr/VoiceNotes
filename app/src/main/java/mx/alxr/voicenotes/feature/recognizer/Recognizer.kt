@@ -14,7 +14,6 @@ import mx.alxr.voicenotes.repository.wallet.IWalletRepository
 import mx.alxr.voicenotes.utils.errors.ProjectException
 import mx.alxr.voicenotes.utils.logger.ILogger
 import okhttp3.*
-import java.lang.StringBuilder
 import java.util.concurrent.TimeUnit
 
 class Recognizer(
@@ -68,20 +67,24 @@ class Recognizer(
                 val result = adapter.fromJson(rawAnswer)
                 result
             }
+            .map { extractResult(it) }
             .flatMap { result ->
-                val string: String = extractResult(result)
-                recordsRepository
-                    .getCurrent(job)
+                walletRepository
+                    .updateWallet(args)
                     .flatMap {
-                        recordsRepository.insert(
-                            it.copy(
-                                transcription = string,
-                                isTranscribed = true,
-                                isRecognizeInProgress = false,
-                                isSynchronized = false
-                            )
-                        )
-                        Single.just(Unit)
+                        recordsRepository
+                            .getCurrent(job)
+                            .flatMap {
+                                recordsRepository.insert(
+                                    it.copy(
+                                        transcription = result,
+                                        isTranscribed = true,
+                                        isRecognizeInProgress = false,
+                                        isSynchronized = false
+                                    )
+                                )
+                                Single.just(Unit)
+                            }
                     }
             }
             .doOnError {
@@ -92,7 +95,7 @@ class Recognizer(
     private fun extractResult(source: SynchronousRecognizeResult): String {
         val results = source.results ?: return ""
         val builder = StringBuilder()
-        for (result in results){
+        for (result in results) {
             result.alternatives?.apply {
                 builder.append(firstOrNull()?.transcript ?: "")
             }
@@ -102,13 +105,15 @@ class Recognizer(
 
     private fun recognizeAsynchronous(args: TranscriptionArgs): Single<Unit> {
         val duration = args.entity?.duration?.getDuration()
-        return Single.fromCallable { throw ProjectException(
-            messageId = R.string.error_feature_under_construction_long_duration,
-            args = duration)
+        return Single.fromCallable {
+            throw ProjectException(
+                messageId = R.string.error_feature_under_construction_long_duration,
+                args = duration
+            )
         }
     }
 
-    private fun Long.getDuration():String {
+    private fun Long.getDuration(): String {
         val minutes = TimeUnit.MILLISECONDS.toMinutes(this)
         val seconds = TimeUnit.MILLISECONDS.toSeconds(this + 500L) - TimeUnit.MINUTES.toSeconds(minutes)
         return String.format("%d:%02d", minutes, seconds)

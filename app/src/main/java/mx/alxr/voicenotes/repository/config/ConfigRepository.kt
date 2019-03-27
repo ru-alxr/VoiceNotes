@@ -6,12 +6,20 @@ import com.google.firebase.remoteconfig.FirebaseRemoteConfig
 import com.google.firebase.remoteconfig.FirebaseRemoteConfigValue
 import io.reactivex.Single
 import io.reactivex.SingleEmitter
+import io.reactivex.functions.Function3
+import io.reactivex.schedulers.Schedulers
 import java.util.concurrent.Executors
 
 const val RAW_LANGUAGES = "raw_google_cloud_speech_recognition_languages"
 const val RAW_CREDENTIALS = "raw_google_cloud_credentials"
 const val SYNCHRONOUS_DURATION = "google_cloud_speech_synchronous_recognition"
-const val INITIAL_COINS_AMOUNT = "initial_coins_amount"
+
+const val INITIAL_PROMO_COINS_AMOUNT = "initial_promo_coins_amount"
+const val INITIAL_PROMO_DESCRIPTION = "initial_promo_description"
+const val INITIAL_PROMO_EXTRA_DESCRIPTION = "initial_promo_extra_description"
+
+const val COIN_DURATION_SECONDS = "coin_duration_seconds"
+const val SLACK_TOKEN = "slack_bot_token"
 
 class ConfigRepository(
     private val config: FirebaseRemoteConfig,
@@ -30,11 +38,30 @@ class ConfigRepository(
         return imp(SYNCHRONOUS_DURATION)
     }
 
-    override fun getInitialCoinsAmount(): Single<Long> {
-        return imp(INITIAL_COINS_AMOUNT)
+    override fun getSlackToken(): Single<String> {
+        return implString(SLACK_TOKEN)
     }
 
-    private fun implString(key:String): Single<String>{
+    override fun getInitialCoinsAmount(): Single<InitialPromo> {
+        return Single
+            .zip(
+                imp(INITIAL_PROMO_COINS_AMOUNT).subscribeOn(Schedulers.newThread()),
+                implString(INITIAL_PROMO_DESCRIPTION).subscribeOn(Schedulers.newThread()),
+                implString(INITIAL_PROMO_EXTRA_DESCRIPTION).subscribeOn(Schedulers.newThread()),
+                Function3<Long, String, String, InitialPromo> { amount, description, extraDescription ->
+                    InitialPromo(
+                        amount = amount,
+                        description = description,
+                        extraDescription = extraDescription
+                    )
+                })
+    }
+
+    override fun getCoinDurationSeconds(): Single<Long> {
+        return imp(COIN_DURATION_SECONDS)
+    }
+
+    private fun implString(key: String): Single<String> {
         val executor = Executors.newSingleThreadExecutor()
         return Single
             .create { emitter ->
@@ -53,7 +80,7 @@ class ConfigRepository(
             }
     }
 
-    private fun imp(key:String):Single<Long>{
+    private fun imp(key: String): Single<Long> {
         val executor = Executors.newSingleThreadExecutor()
         return Single
             .create { emitter ->

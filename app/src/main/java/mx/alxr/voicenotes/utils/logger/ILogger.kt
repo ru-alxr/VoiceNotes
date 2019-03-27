@@ -14,6 +14,8 @@ interface ILogger {
 
         fun log()
 
+        fun e(throwable: Throwable)
+
     }
 
 }

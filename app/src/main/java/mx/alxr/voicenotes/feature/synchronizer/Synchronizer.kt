@@ -59,9 +59,7 @@ class Synchronizer(
             .observeOn(Schedulers.io())
             .subscribeWith(FlowableDisposable<List<RecordEntity>>(
                 next = { performWith(LinkedList(it)) },
-                error = {
-                    it.printStackTrace()
-                }
+                error = { logger.with(this).e(it) }
             ))
     }
 
@@ -108,7 +106,7 @@ class Synchronizer(
                 removeTask(entity)
                 if (check) {
                     recordsRepository.insert(entity.copy(isFileDownloaded = true))
-                    emitter.onSuccess(localFile)
+                    onSuccess(emitter, localFile)
                 } else {
                     onFailure(emitter, ProjectException(R.string.error_file_download))
                 }
@@ -166,8 +164,7 @@ class Synchronizer(
                 error = {
                     //todo
                     // next attempt when Activity#onStart will be triggered
-
-                    it.printStackTrace()
+                    logger.with(this).e(it)
 
                 }
             ))
@@ -276,8 +273,7 @@ class Synchronizer(
                         }
                         updateRemoteRecord(entity, emitter)
                     } catch (e: Exception) {
-                        //todo: implement stack trace logger with ILogger!!!
-                        e.printStackTrace()
+                        logger.with(this).e(e)
                         onFailure(emitter, NullPointerException("No record"))
                     }
                 }
@@ -324,7 +320,7 @@ class Synchronizer(
             })
             .addOnFailureListener(executor, OnFailureListener {
                 logger.with(this@Synchronizer).add("createRecord fail").log()
-                it.printStackTrace()
+                logger.with(this).e(it)
                 onFailure(emitter, it)
             })
     }
@@ -346,11 +342,11 @@ class Synchronizer(
                         it.data!!.apply {
                             val record = toRemoteObject()
                             logger.with(this@Synchronizer).add("updateLocalRecord preparation with $record").log()
-                            emitter.onSuccess(record)
+                            onSuccess(emitter, record)
                         }
                     } catch (e: Exception) {
                         logger.with(this@Synchronizer).add("updateLocalRecord preparation fail $e").log()
-                        e.printStackTrace()
+                        logger.with(this).e(e)
                         onFailure(emitter, NullPointerException("No record"))
                     }
                 }
@@ -359,6 +355,11 @@ class Synchronizer(
                 logger.with(this@Synchronizer).add("updateLocalRecord fail $it").log()
                 onFailure(emitter, it)
             })
+    }
+
+    private fun <T> onSuccess(emitter: SingleEmitter<T>, result: T) {
+        if (emitter.isDisposed) return
+        emitter.onSuccess(result)
     }
 
     private fun <T> onFailure(emitter: SingleEmitter<T>, e: Throwable) {
@@ -488,7 +489,7 @@ class Synchronizer(
             .addOnFailureListener(executor, OnFailureListener {
                 logger.with(this@Synchronizer)
                     .add("performDelete remote record ${entity.fileName} :OnFailure ").log()
-                it.printStackTrace()
+                logger.with(this).e(it)
                 onFailure(emitter, it)
             }
             )
@@ -518,7 +519,7 @@ class Synchronizer(
                         encoding = encoding,
                         sampleRateHertz = sampleRateHertz
                     )
-                    emitter.onSuccess(remoteStub)
+                    onSuccess(emitter, remoteStub)
                 }
             })
             .addOnFailureListener(executor, OnFailureListener {
@@ -546,7 +547,7 @@ class Synchronizer(
                                 sampleRateHertz = sampleRateHertz,
                                 encoding = encoding
                             )
-                            emitter.onSuccess(remoteStub)
+                            onSuccess(emitter, remoteStub)
                         }
                         return@OnFailureListener
                     }
@@ -573,7 +574,7 @@ data class RemoteRecord(
     val delete: Boolean = false,
     val encoding: String,
     val sampleRateHertz: Long,
-    val remoteFileUri:String = ""
+    val remoteFileUri: String = ""
 )
 
 /**

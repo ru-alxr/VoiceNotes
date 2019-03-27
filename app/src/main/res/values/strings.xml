@@ -75,7 +75,9 @@
     <string name="error_record_language_required">Language of voice must be defined</string>
     <string name="error_file_must_be_uploaded">Wait till record will be synchronized</string>
     <string name="error_cannot_recognize_deleted_record">Cannot recognize deleted record</string>
-    <string name="error_no_funds">Not enough funds</string>
+    <string name="error_absolutely_no_funds_one_coin_required">Your have no coins.\nOne coin is required</string>
+    <string name="error_not_enough_funds">Not enough funds\n %s coins are required, %s coins are available</string>
+    <string name="error_absolutely_no_funds">Your have no coins.\n%s coins are required</string>
 
     <string name="cancel">Cancel</string>
     <string name="confirm">Confirm</string>
@@ -108,5 +110,7 @@
     <string name="delete_record_message">Delete record %s?</string>
 
     <string name="error_feature_under_construction_long_duration">This feature is under construction: decoding long duration audio file (60 seconds and longer). Your file is %s long</string>
+    <string name="promo_request_sent">Thank you for using our service! Promo request has been sent. You will get extra coins in a few hours.</string>
+    <string name="purchase_coins">Get some coins</string>
 
 </resources>

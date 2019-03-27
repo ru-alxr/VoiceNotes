@@ -6,10 +6,12 @@ import mx.alxr.voicenotes.repository.user.UserEntity
 
 interface IWalletRepository {
 
-    fun getAvailableCoins(): Single<Int>
+    fun getAvailableCoins(): Single<Long>
 
     fun checkCoins(args: TranscriptionArgs): Single<TranscriptionArgs>
 
     fun newbiePromotion(isNewUser: Boolean, entity:UserEntity):Single<UserEntity>
+
+    fun updateWallet(args:TranscriptionArgs):Single<Unit>
 
 }

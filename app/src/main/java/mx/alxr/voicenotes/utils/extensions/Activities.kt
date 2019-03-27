@@ -216,7 +216,7 @@ fun Activity.shareTranscription(isTranscriptionReady: Boolean, transcription: St
     }
 }
 
-fun Activity.alertRequiredData(message: String, solution: ()-> Unit){
+fun Activity.alertRequiredData(message: String, positive:Int = android.R.string.ok, solution: ()-> Unit){
     AlertDialog
         .Builder(this)
         .setView(R.layout.dialog_data_required)
@@ -232,7 +232,7 @@ fun Activity.alertRequiredData(message: String, solution: ()-> Unit){
                 }
             }
             findViewById<TextView>(R.id.positive)?.apply {
-                setText(android.R.string.ok)
+                setText(positive)
                 setOnClickListener {
                     dismiss()
                     solution.invoke()

@@ -16,6 +16,13 @@ interface IConfigRepository {
     /**
      * Coins amount user received on registration
      */
-    fun getInitialCoinsAmount():Single<Long>
+    fun getInitialCoinsAmount():Single<InitialPromo>
+
+    /**
+     * how many seconds buys one coin
+     */
+    fun getCoinDurationSeconds():Single<Long>
+
+    fun getSlackToken():Single<String>
 
 }

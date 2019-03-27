@@ -7,14 +7,14 @@ import com.google.firebase.remoteconfig.FirebaseRemoteConfigSettings
 import com.google.firebase.storage.FirebaseStorage
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
-import io.reactivex.schedulers.Schedulers
-import mx.alxr.voicenotes.BuildConfig
 import mx.alxr.voicenotes.application.getAppLogger
 import mx.alxr.voicenotes.db.AppDatabase
 import mx.alxr.voicenotes.feature.FeatureNavigation
 import mx.alxr.voicenotes.feature.IFeatureNavigation
 import mx.alxr.voicenotes.feature.player.IPlayer
 import mx.alxr.voicenotes.feature.player.Player
+import mx.alxr.voicenotes.feature.promo.IPromoter
+import mx.alxr.voicenotes.feature.promo.Promoter
 import mx.alxr.voicenotes.feature.recognizer.IRecognizer
 import mx.alxr.voicenotes.feature.recognizer.Recognizer
 import mx.alxr.voicenotes.feature.recorder.FILE_EXTENSION
@@ -48,9 +48,6 @@ import okhttp3.*
 import okio.Buffer
 import org.koin.android.ext.koin.androidContext
 import org.koin.dsl.module.module
-import retrofit2.Retrofit
-import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory
-import retrofit2.converter.gson.GsonConverterFactory
 import java.io.EOFException
 import java.io.IOException
 import java.nio.charset.Charset
@@ -86,9 +83,13 @@ val APPLICATION_MODULE = module {
 
     single { provideOkHttpClient(get()) }
 
-    single(name = "speech") {
-        provideRetrofit(okHttpClient = get(), url = BuildConfig.SPEECH_RECOGNITION_API_V1_ENDPOINT)
-    }
+//    single(name = "speech") {
+//        provideRetrofit(okHttpClient = get(), url = BuildConfig.SPEECH_RECOGNITION_API_V1_ENDPOINT)
+//    }
+//
+//    single(name = "slack") {
+//        provideRetrofit(okHttpClient = get(), url = "https://slack.com/api/")
+//    }
 
     single {
         Moshi
@@ -125,7 +126,14 @@ val APPLICATION_MODULE = module {
 
     single { Player(get()) as IPlayer }
 
-    single { WalletRepository() as IWalletRepository }
+    single {
+        WalletRepository(
+            logger = get(),
+            firestore = get(),
+            config = get(),
+            userRepository = get()
+        ) as IWalletRepository
+    }
 
     single { RecordsRepository(db = get(), logger = get(), repo = get()) as IRecordsRepository }
 
@@ -147,6 +155,15 @@ val APPLICATION_MODULE = module {
         ) as IRecordsFetcher
     }
 
+    single {
+        Promoter(
+            userRepository = get(),
+            config = get(),
+            client = get(),
+            resources = get()
+        ) as IPromoter
+    }
+
 }
 
 private fun getRemoteConfig(): FirebaseRemoteConfig {
@@ -162,6 +179,15 @@ private fun getRemoteConfig(): FirebaseRemoteConfig {
     defValues[RAW_LANGUAGES] = "[]"
     defValues[SYNCHRONOUS_DURATION] = 15000L
     defValues[RAW_CREDENTIALS] = "{}"
+
+    defValues[INITIAL_PROMO_COINS_AMOUNT] = 100
+    defValues[INITIAL_PROMO_DESCRIPTION] = ""
+    defValues[INITIAL_PROMO_EXTRA_DESCRIPTION] = ""
+
+    defValues[COIN_DURATION_SECONDS] = 15
+
+    defValues[SLACK_TOKEN] = ""
+
     config.setDefaults(defValues)
     return config
 }
@@ -175,13 +201,13 @@ private fun provideOkHttpClient(logger: ILogger): OkHttpClient {
     return okHttpClientBuilder.build()
 }
 
-private fun provideRetrofit(okHttpClient: OkHttpClient, url: String): Retrofit =
-    Retrofit.Builder()
-        .baseUrl(url)
-        .client(okHttpClient)
-        .addConverterFactory(GsonConverterFactory.create())
-        .addCallAdapterFactory(RxJava2CallAdapterFactory.createWithScheduler(Schedulers.io()))
-        .build()
+//private fun provideRetrofit(okHttpClient: OkHttpClient, url: String): Retrofit =
+//    Retrofit.Builder()
+//        .baseUrl(url)
+//        .client(okHttpClient)
+//        .addConverterFactory(GsonConverterFactory.create())
+//        .addCallAdapterFactory(RxJava2CallAdapterFactory.createWithScheduler(Schedulers.io()))
+//        .build()
 
 private class ResponseCodeInterceptor(val logger: ILogger) : Interceptor {
 
