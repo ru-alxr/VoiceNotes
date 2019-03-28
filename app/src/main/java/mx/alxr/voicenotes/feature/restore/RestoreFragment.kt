@@ -1,7 +1,9 @@
 package mx.alxr.voicenotes.feature.restore
 
 import android.os.Bundle
-import android.view.*
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
@@ -43,13 +45,16 @@ class RestoreFragment : Fragment(), Observer<Model> {
 
     private fun handleRestoreResult(restoreResult: Int) {
         if (restoreResult == -1) return
-        activity?.information(
-            String
+        val message = when (restoreResult) {
+            0 -> getString(R.string.restore_records_result_zero_message)
+            1 -> getString(R.string.restore_records_result_one_message)
+            else -> String
                 .format(
                     getString(R.string.restore_records_result_message),
                     restoreResult
                 )
-        ) { mViewModel.onResultShown() }
+        }
+        activity?.information(message) { mViewModel.onResultShown() }
     }
 
     private fun handleError(solution: ErrorSolution) {

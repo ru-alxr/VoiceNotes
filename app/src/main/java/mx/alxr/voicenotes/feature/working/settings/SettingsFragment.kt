@@ -1,10 +1,12 @@
 package mx.alxr.voicenotes.feature.working.settings
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
 import android.view.LayoutInflater
+import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
@@ -17,7 +19,7 @@ import mx.alxr.voicenotes.utils.extensions.format
 import mx.alxr.voicenotes.utils.extensions.showDualSelectorDialog
 import org.koin.android.viewmodel.ext.android.viewModel
 
-class SettingsFragment : Fragment(), Observer<Model>, View.OnClickListener {
+class SettingsFragment : Fragment(), Observer<Model>, View.OnClickListener, View.OnTouchListener {
 
     private val mViewModel: SettingsViewModel by viewModel()
 
@@ -30,6 +32,7 @@ class SettingsFragment : Fragment(), Observer<Model>, View.OnClickListener {
         mViewModel.getLiveModel().observe(this, this)
         setting_native_language.setOnClickListener(this)
         setting_sign_out.setOnClickListener(this)
+        lock_view.setOnTouchListener(this)
     }
 
     override fun onChanged(model: Model?) {
@@ -49,6 +52,7 @@ class SettingsFragment : Fragment(), Observer<Model>, View.OnClickListener {
         )
         account_email?.applyText(model.email)
         handleSignOut(model.signOut)
+        handleUiLock(model.lockUi)
     }
 
     private fun TextView.applyText(value: String) {
@@ -72,7 +76,13 @@ class SettingsFragment : Fragment(), Observer<Model>, View.OnClickListener {
             message = message,
             positiveLabel = R.string.confirm,
             negativeLabel = R.string.cancel,
-            positive = { performSignOut() }
+            positive = {
+                mViewModel.onSignOutConfirm()
+                performSignOut()
+            },
+            negative = {
+                mViewModel.onSignOutCancel()
+            }
         )
     }
 
@@ -93,6 +103,16 @@ class SettingsFragment : Fragment(), Observer<Model>, View.OnClickListener {
                     PackageManager.PERMISSION_GRANTED == checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE)
         }
         return false
+    }
+
+    private fun handleUiLock(lockUi:Boolean){
+        lock_progress_bar_view.visibility = if (lockUi) View.VISIBLE else View.INVISIBLE
+        lock_view.visibility = if (lockUi) View.VISIBLE else View.INVISIBLE
+    }
+
+    @SuppressLint("ClickableViewAccessibility")
+    override fun onTouch(v: View?, event: MotionEvent?): Boolean {
+        return true
     }
 
 }

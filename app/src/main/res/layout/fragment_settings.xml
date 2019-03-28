@@ -1,98 +1,116 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <LinearLayout
+    <ScrollView
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:paddingStart="8dp"
-        android:paddingEnd="8dp">
+        android:layout_height="match_parent">
 
-        <Space
+        <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="16dp" />
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingStart="8dp"
+            android:paddingEnd="8dp">
 
-        <TextView
-            style="@style/setting_label"
-            android:text="@string/account_details" />
+            <Space
+                android:layout_width="match_parent"
+                android:layout_height="16dp" />
 
-        <TextView
-            android:id="@+id/account_display_name"
-            style="@style/immutable_setting_value"
-            tools:text="Aleksandr Koscheev" />
+            <TextView
+                style="@style/setting_label"
+                android:text="@string/account_details" />
 
-        <TextView
-            android:id="@+id/account_provider"
-            style="@style/immutable_setting_value"
-            tools:text="Authorization provider: google.com" />
+            <TextView
+                android:id="@+id/account_display_name"
+                style="@style/immutable_setting_value"
+                tools:text="Aleksandr Koscheev" />
 
-        <TextView
-            android:id="@+id/account_email"
-            style="@style/immutable_setting_value"
-            tools:text="ru.alxr@google.com" />
+            <TextView
+                android:id="@+id/account_provider"
+                style="@style/immutable_setting_value"
+                tools:text="Authorization provider: google.com" />
 
-        <View
-            android:layout_width="match_parent"
-            android:layout_height="1dp"
-            android:background="@color/dialog_delimiter" />
+            <TextView
+                android:id="@+id/account_email"
+                style="@style/immutable_setting_value"
+                tools:text="ru.alxr@google.com" />
 
-        <View
-            android:layout_width="match_parent"
-            android:layout_height="2dp" />
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="@color/dialog_delimiter" />
 
-        <View
-            android:layout_width="match_parent"
-            android:layout_height="1dp"
-            android:background="@color/dialog_delimiter" />
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="2dp" />
 
-        <Space
-            android:layout_width="match_parent"
-            android:layout_height="16dp" />
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="@color/dialog_delimiter" />
 
-        <TextView
-            style="@style/setting_label"
-            android:text="@string/sign_out_application" />
+            <Space
+                android:layout_width="match_parent"
+                android:layout_height="16dp" />
 
-        <TextView
-            android:id="@+id/setting_sign_out"
-            style="@style/setting_value"
-            android:drawableEnd="@drawable/ic_logout_normal"
-            android:text="@string/perform_sign_out" />
+            <TextView
+                style="@style/setting_label"
+                android:text="@string/sign_out_application" />
 
-        <TextView
-            style="@style/setting_explanation"
-            android:text="@string/all_local_files_will_be_erased" />
+            <TextView
+                android:id="@+id/setting_sign_out"
+                style="@style/setting_value"
+                android:drawableEnd="@drawable/ic_logout_normal"
+                android:text="@string/perform_sign_out" />
 
-        <View
-            android:layout_width="match_parent"
-            android:layout_height="1dp"
-            android:background="@color/dialog_delimiter" />
+            <TextView
+                style="@style/setting_explanation"
+                android:text="@string/all_local_files_will_be_erased" />
 
-        <Space
-            android:layout_width="match_parent"
-            android:layout_height="16dp" />
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="@color/dialog_delimiter" />
 
-        <TextView
-            style="@style/setting_label"
-            android:text="@string/native_language_setting" />
+            <Space
+                android:layout_width="match_parent"
+                android:layout_height="16dp" />
 
-        <TextView
-            android:id="@+id/setting_native_language"
-            style="@style/setting_value"
-            tools:text="@string/native_language_empty" />
+            <TextView
+                style="@style/setting_label"
+                android:text="@string/native_language_setting" />
 
-        <TextView
-            style="@style/setting_explanation"
-            android:text="@string/setting_native_language_explanation" />
+            <TextView
+                android:id="@+id/setting_native_language"
+                style="@style/setting_value"
+                tools:text="@string/native_language_empty" />
 
-        <View
-            android:layout_width="match_parent"
-            android:layout_height="1dp"
-            android:background="@color/dialog_delimiter" />
+            <TextView
+                style="@style/setting_explanation"
+                android:text="@string/setting_native_language_explanation" />
 
-    </LinearLayout>
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="@color/dialog_delimiter" />
 
-</ScrollView>
+        </LinearLayout>
+
+    </ScrollView>
+
+    <View
+        android:id="@+id/lock_view"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
+    <ProgressBar
+        android:id="@+id/lock_progress_bar_view"
+        android:layout_width="80dp"
+        android:layout_height="80dp"
+        android:layout_centerInParent="true"
+        android:indeterminate="true" />
+
+</RelativeLayout>

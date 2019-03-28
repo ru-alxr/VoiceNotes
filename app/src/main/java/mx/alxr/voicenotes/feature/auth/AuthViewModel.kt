@@ -43,6 +43,7 @@ class AuthViewModel(
             onAuthFail()
             return
         }
+        lockUi()
         mDisposable?.dispose()
         mDisposable = remoteUserRepository
             .getUser(extract)
@@ -63,10 +64,16 @@ class AuthViewModel(
                     val model = mLiveModel.value!!
                     mLiveModel.value = model.copy(
                         solution = errorResolver.resolve(it, Interaction.Snack),
-                        signOut = true
+                        signOut = true,
+                        lockUi = false
                     )
                 }
             ))
+    }
+
+    private fun lockUi(){
+        val model = mLiveModel.value!!
+        mLiveModel.value = model.copy(lockUi = true)
     }
 
     private fun FirebaseUser.extract(uid: String): ExtractedFirebaseUser? {
@@ -92,7 +99,7 @@ class AuthViewModel(
 
     fun onAuthFail() {
         val model = mLiveModel.value!!
-        mLiveModel.value = model.copy(errorMessage = R.string.auth_fail, signOut = true)
+        mLiveModel.value = model.copy(errorMessage = R.string.auth_fail, signOut = true, lockUi = true)
     }
 
     private var mDisposable: Disposable? = null
@@ -119,7 +126,7 @@ class AuthViewModel(
 
     fun onSignedOut() {
         val model = mLiveModel.value!!
-        mLiveModel.value = model.copy(signOut = false)
+        mLiveModel.value = model.copy(signOut = false, lockUi = false)
     }
 
 }
@@ -127,5 +134,6 @@ class AuthViewModel(
 data class Model(
     val errorMessage: Int = 0,
     val signOut: Boolean = true,
-    val solution: ErrorSolution = ErrorSolution()
+    val solution: ErrorSolution = ErrorSolution(),
+    val lockUi: Boolean = false
 )

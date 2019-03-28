@@ -66,6 +66,7 @@ class AuthFragment : Fragment(), View.OnClickListener, Observer<Model> {
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        mLogger.with(this@AuthFragment).add("onActivityResult").log()
         super.onActivityResult(requestCode, resultCode, data)
         if (requestCode == RC_SIGN_IN) {
             val response = IdpResponse.fromResultIntent(data)
@@ -80,11 +81,16 @@ class AuthFragment : Fragment(), View.OnClickListener, Observer<Model> {
     }
 
     override fun onChanged(model: Model?) {
+        mLogger.with(this@AuthFragment).add("On model change $model").log()
         if (model == null) return
-        auth_view.isEnabled = !model.signOut
         handleErrorMessage(model.errorMessage)
         handleErrorSolution(model.solution)
         handleSignOut(model.signOut)
+        handleUiLock(model.lockUi)
+    }
+
+    private fun handleUiLock(lockUi: Boolean) {
+        auth_view.isEnabled = !lockUi
     }
 
     private fun handleSignOut(signOut: Boolean) {

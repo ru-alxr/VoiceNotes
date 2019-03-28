@@ -70,6 +70,16 @@ class SettingsViewModel(
             .doOnSuccess { nav.navigateFeature(FEATURE_SIGN_OUT) }
             .subscribe()
     }
+
+    fun onSignOutCancel() {
+        val model = mLiveModel.value!!
+        mLiveModel.value = model.copy(lockUi = false, signOut = false)
+    }
+
+    fun onSignOutConfirm() {
+        val model = mLiveModel.value!!
+        mLiveModel.value = model.copy(lockUi = true, signOut = false)
+    }
 }
 
 data class Model(
@@ -77,5 +87,6 @@ data class Model(
     val signOut: Boolean = false,
     val authProvider:String = "",
     val displayName:String = "",
-    val email:String = ""
+    val email:String = "",
+    val lockUi:Boolean = false
 )

@@ -57,15 +57,14 @@ class WalletRepository(
     }
 
     override fun newbiePromotion(isNewUser: Boolean, entity: UserEntity): Single<UserEntity> {
-        if (!isNewUser) return Single.just(entity)
         return getTransactions(entity, 1)
             .flatMap {
                 if (it.isEmpty()) {
-                    //todo no transactions yet, we can promote user
+                    // no transactions yet, we can promote user
                     promoteUser(entity)
 
                 } else {
-                    //todo user has some transactions, we cannot promote user
+                    // user has some transactions, we cannot promote user
                     Single.just(entity)
                 }
             }
